@@ -7,7 +7,7 @@
 %
 % Code by Osorio, S. (2023)
 
-clc,
+clear, clc,
 
 % create a directory to save data
 iEEG_dir = 'E:\Matlab\IEEG';
@@ -60,7 +60,6 @@ if observed_analysis == 1
                 AllDataStructuresFT{sub_i,cond_i}.time{trial_i}    = AllDataStructuresFT{sub_i,cond_i}.time{trial_i}(:,1:length(envelope_speech));
             end
         end
-        
         % croscorrelation if performed in sliding windows
         if segestimation == 1
             for trial_i=1:n_trials
@@ -78,7 +77,7 @@ if observed_analysis == 1
                             acoustic_signal  = envelope_speech(trial_i,kdx:kdx+windowlength);
                             % get all coefficients and lags (for z normalized signals)
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
-                                zscore(acoustic_signal),maxlag,'normalized');
+                                                     zscore(acoustic_signal),maxlag,'normalized');
                             % find max coefficient and its corresponding lag
                             r_speech{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                             lag_speech{sub_i}(elec_i,trial_i,dtw_i)  = templags(tempr == max(tempr));
@@ -86,7 +85,7 @@ if observed_analysis == 1
                             brain_signal     = AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,kdx:kdx+windowlength);
                             acoustic_signal  = envelope_music(trial_i,kdx:kdx+windowlength);
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
-                                zscore(acoustic_signal),maxlag,'normalized');
+                                                     zscore(acoustic_signal),maxlag,'normalized');
                             r_music{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                             lag_music{sub_i}(elec_i,trial_i,dtw_i)  = templags(tempr == max(tempr));
                             kdx = kdx+(windowlength/2);
@@ -96,14 +95,14 @@ if observed_analysis == 1
                             brain_signal     = AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,kdx:end);
                             acoustic_signal  = envelope_speech(trial_i,kdx:end);
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
-                                zscore(acoustic_signal),maxlag,'normalized');
+                                                     zscore(acoustic_signal),maxlag,'normalized');
                             r_speech{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                             lag_speech{sub_i}(elec_i,trial_i,dtw_i)  = templags(tempr == max(tempr));
                             % music 
                             brain_signal     = AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,kdx:end);
                             acoustic_signal  = envelope_music(trial_i,kdx:end);
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
-                                zscore(acoustic_signal),maxlag,'normalized');
+                                                     zscore(acoustic_signal),maxlag,'normalized');
                             r_music{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                             lag_music{sub_i}(elec_i,trial_i,dtw_i)  = templags(tempr == max(tempr));
                             kdx = trialength;
@@ -111,7 +110,7 @@ if observed_analysis == 1
                     end
                 end
             end
-            % crosscorrelation if performed on the entire signal
+        % crosscorrelation if performed on the entire signal
         else
             for trial_i=1:n_trials
                 for elec_i=1:n_electrodes
@@ -119,14 +118,14 @@ if observed_analysis == 1
                     brain_signal     = AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:);
                     acoustic_signal  = envelope_speech(trial_i,:);
                     [tempr,templags] = xcorr(zscore(brain_signal), ...
-                        zscore(acoustic_signal),maxlag,'normalized');
+                                             zscore(acoustic_signal),maxlag,'normalized');
                     r_speech{sub_i}(elec_i,trial_i,:)    = max(tempr);
                     lag_speech{sub_i}(elec_i,trial_i,:)  = templags(tempr == max(tempr));
                     % music
                     brain_signal     = AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,:);
                     acoustic_signal  = envelope_music(trial_i,:);
                     [tempr,templags] = xcorr(zscore(brain_signal), ...
-                        zscore(acoustic_signal),maxlag,'normalized');
+                                             zscore(acoustic_signal),maxlag,'normalized');
                     r_music{sub_i}(elec_i,trial_i,:)    = max(tempr);
                     lag_music{sub_i}(elec_i,trial_i,:)  = templags(tempr == max(tempr));
                 end
@@ -166,11 +165,9 @@ if permutation_analysis == 1
             if segestimation == 1
                 for trial_i=1:n_trials
                     for elec_i=1:n_electrodes
-                        
                         windowlength = 2 * fs; % use sliding windows of 2 seconds
                         kdx = 1; dtw_i = 1;
-                        trialength = min([length(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:)) length(envelope_speech(trial_i,:))]);  %length of current trial
-                        
+                        trialength = min([length(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:)) length(envelope_speech(trial_i,:))]);  %length of current trial               
                         while kdx < trialength
                             if trialength - kdx > windowlength
                                 % speech
