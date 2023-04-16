@@ -19,7 +19,7 @@ sub2plot = {'sub-02','sub-03','sub-05','sub-06','sub-10','sub-12','sub-16','sub-
             'sub-51','sub-54','sub-55','sub-58','sub-59','sub-60','sub-61','sub-63'};
             
 % frequency band to analyze (SLB or HFB)
-band2analyze = 'HFB';  
+band2analyze = 'SFB';  
 AllECOGData  = cell(length(sub2plot),3);
 fs           = 250;
 % windowlength = 2 * fs; % use sliding windows of 5 seconds
@@ -58,7 +58,9 @@ for sub_i=1:length(sub2plot)
     ChannelLabelTask  = squeeze(struct2cell(Channel))';
     Channels2keepTask = strcmp(ChannelLabelTask(:,3),'ECOG');       % keep only ECOG channels
     ChannelLabel2keep = ChannelLabelTask(Channels2keepTask,1);      % get the labels for those channels. We'll need them for rest data
-    ChannelFlagTask(~Channels2keepTask) = [];                       % delete channels that won't be included from the ChannelFlag list
+    ChannelFlagTask(~Channels2keepTask) = [];    
+    names4fields     = fieldnames(Channel);
+    % delete channels that won't be included from the ChannelFlag list
     clear ChannelFlag Channel
     
     cd(['E:\Matlab\IEEG\' sub2plot{sub_i}]);
@@ -124,4 +126,4 @@ for sub_i=1:length(sub2plot)
 end
 
 % save fieldtrip structures
-save([data_dir,filesep,'fieldtrip_structures_' band2analyze '.mat'], 'AllDataStructuresFT','AllChannelLabels');
+save([data_dir,filesep,'fieldtrip_structures_' band2analyze '.mat'], 'AllDataStructuresFT','AllChannelLabels','names4fields');
