@@ -12,6 +12,9 @@ sub2plot    = {'sub-02','sub-03','sub-05','sub-06','sub-10','sub-12','sub-16','s
 
 % whether to estimate crosscorrelation in small segments (1) or on the entire signal (0)
 segestimation = 0;
+fs            = 250;
+nperms        = 100;
+maxlag        = 400;
 
 % load neural data
 if strcmp(band2analyze,'SFB')
@@ -28,51 +31,63 @@ load('E:\Matlab\IEEG\Scripts\envelopes_speech.mat');
 for sub_i=1:length(sub2plot)
     disp(['Estimating croscorrelation for subject ' num2str(sub_i)]);
     
-    % Croscorr Speech data  
-    % here we trim the EcoG data which is a couple of samples longer than cochlear envelopes
-    for idx=1:length(AllDataStructuresFT{sub_i,1}.trial)
+    % SPEECH
+    % number of trials
+    n_trials = length(AllDataStructuresFT{sub_i,1}.trial);
+    
+    % trim the EcoG data to match length of cochlear envelopes
+    for idx=1:n_trials
         AllDataStructuresFT{sub_i,1}.trial{1,idx} = AllDataStructuresFT{sub_i,1}.trial{1,idx}(:,1:length(envelope_speech));
         AllDataStructuresFT{sub_i,1}.time{idx}    = AllDataStructuresFT{sub_i,1}.time{idx}(:,1:length(envelope_speech));
     end   
    
-    % croscorrelation
+    % croscorrelation if performed in sliding windows
     if segestimation == 1
-        for trial_i=1:length(AllDataStructuresFT{sub_i,1}.trial)
-            for elec_i=1:size(AllDataStructuresFT{sub_i,1}.trial{trial_i},1)
-                
-                windowlength = 2 * fs; % use sliding windows of 2 seconds
-                kdx = 1; dtw_i = 1;
-                
+        for trial_i=1:n_trials
+            % number of electrodes for this subject
+            n_electrodes = size(AllDataStructuresFT{sub_i,1}.trial{trial_i},1);
+            for elec_i=1:n_electrodes  
+                % use sliding windows of 2 seconds
+                windowlength = 2 * fs; 
+                kdx   = 1; 
+                dtw_i = 1;                
                 trialength = min([length(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:)) length(envelope_speech(trial_i,:))]);  %length of current trial
                 
                 while kdx < trialength
                     if trialength - kdx > windowlength
-                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,kdx:kdx+windowlength)),zscore(envelope_speech(trial_i,kdx:kdx+windowlength)),maxlag,'normalized');
+                        % get all coefficients and lags
+                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,kdx:kdx+windowlength)), ...
+                                                 zscore(envelope_speech(trial_i,kdx:kdx+windowlength)),maxlag,'normalized');
+                        % find max coefficient and its corresponding lag
                         rdata_speech{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                         lagdata_speech{sub_i}(elec_i,trial_i,dtw_i)  = templags(find(tempr == max(tempr)));
                                         
                         kdx = kdx+(windowlength/2);
                         dtw_i = dtw_i + 1;
                     else                                        
-                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,kdx:end)),zscore(envelope_speech(trial_i,kdx:end)),maxlag,'normalized');
+                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,kdx:end)), ...
+                                                 zscore(envelope_speech(trial_i,kdx:end)),maxlag,'normalized');
                         rdata_speech{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                         lagdata_speech{sub_i}(elec_i,trial_i,dtw_i)  = templags(find(tempr == max(tempr)));
                         kdx = trialength;
                     end
                 end
             end
-        end        
+        end  
+    % crosscorrelation if performed on the entire signal
     else    
-        for trial_i=1:length(AllDataStructuresFT{sub_i,1}.trial)
-            for elec_i=1:size(AllDataStructuresFT{sub_i,1}.trial{trial_i},1)
-                [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:)),zscore(envelope_speech(trial_i,:)),maxlag,'normalized');
+        for trial_i=1:n_trials
+            n_electrodes = size(AllDataStructuresFT{sub_i,1}.trial{trial_i},1);
+            for elec_i=1:n_electrodes
+                [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:)), ...
+                                         zscore(envelope_speech(trial_i,:)),maxlag,'normalized');
                 rdata_speech{sub_i}(elec_i,trial_i,:)    = max(tempr);
                 lagdata_speech{sub_i}(elec_i,trial_i,:)  = templags(find(tempr == max(tempr)));
             end
         end
     end
     
-    % here we trim the EcoG data which is a couple of samples longer than cochlear envelopes
+    % MUSIC
     for idx=1:length(AllDataStructuresFT{sub_i,2}.trial)
         AllDataStructuresFT{sub_i,2}.trial{1,idx} = AllDataStructuresFT{sub_i,2}.trial{1,idx}(:,1:length(envelope_music));
         AllDataStructuresFT{sub_i,2}.time{idx}    = AllDataStructuresFT{sub_i,2}.time{idx}(:,1:length(envelope_speech));
@@ -80,23 +95,26 @@ for sub_i=1:length(sub2plot)
     
     
     if segestimation == 1
-        for trial_i=1:length(AllDataStructuresFT{sub_i,2}.trial)
-            for elec_i=1:size(AllDataStructuresFT{sub_i,2}.trial{trial_i},1)
+        for trial_i=1:n_trials
+            for elec_i=1:n_electrodes
                 windowlength = 2 * fs; % use sliding windows of 2 seconds
                 kdx = 1; dtw_i = 1;
                 
-                trialength = min([length(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:)) length(envelope_speech(trial_i,:))]);  %length of current trial
+                trialength = min([length(AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:)) ...
+                                  length(envelope_speech(trial_i,:))]);  %length of current trial
                 
                 while kdx < trialength
                     if trialength - kdx > windowlength
-                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,kdx:kdx+windowlength)),zscore(envelope_music(trial_i,kdx:kdx+windowlength)),maxlag,'normalized');
+                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,kdx:kdx+windowlength)), ... 
+                                                 zscore(envelope_music(trial_i,kdx:kdx+windowlength)),maxlag,'normalized');
                         rdata_music{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                         lagdata_music{sub_i}(elec_i,trial_i,dtw_i)  = templags(find(tempr == max(tempr)));
                         
                         kdx = kdx+(windowlength/2);
                         dtw_i = dtw_i + 1;
                     else
-                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,kdx:end)),zscore(envelope_music(trial_i,kdx:end)),maxlag,'normalized');
+                        [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,kdx:end)), ...
+                                                 zscore(envelope_music(trial_i,kdx:end)),maxlag,'normalized');
                         rdata_music{sub_i}(elec_i,trial_i,dtw_i)    = max(tempr);
                         lagdata_music{sub_i}(elec_i,trial_i,dtw_i)  = templags(find(tempr == max(tempr)));
                         kdx = trialength;
@@ -106,9 +124,10 @@ for sub_i=1:length(sub2plot)
         end
     else
         % croscorrelation
-        for trial_i=1:length(AllDataStructuresFT{sub_i,2}.trial)
-            for elec_i=1:size(AllDataStructuresFT{sub_i,2}.trial{trial_i},1)
-                [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,:)),zscore(envelope_music(trial_i,:)),maxlag,'normalized');
+        for trial_i=1:n_trials
+            for elec_i=1:n_electrodes
+                [tempr,templags] = xcorr(zscore(AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,:)), ...
+                                         zscore(envelope_music(trial_i,:)),maxlag,'normalized');
                 rdata_music{sub_i}(elec_i,trial_i,:)    = max(tempr);
                 lagdata_music{sub_i}(elec_i,trial_i,:)  = templags(find(tempr == max(tempr)));
             end
@@ -117,9 +136,13 @@ for sub_i=1:length(sub2plot)
 end
 
 if segestimation == 1
-    save([data_dir,filesep,'xcorr_' band2analyze '_SEG.mat'],'rdata_speech','lagdata_speech','rdata_music','lagdata_music','band2analyze','sub2plot','AllChannelLabels','names4fields');
+    save([data_dir,filesep,'xcorr_' band2analyze '_SEG.mat'], ...
+        'rdata_speech','lagdata_speech','rdata_music','lagdata_music', ...
+        'band2analyze','sub2plot','AllChannelLabels','names4fields');
 else
-    save([data_dir,filesep,'xcorr_' band2analyze '.mat'],'rdata_speech','lagdata_speech','rdata_music','lagdata_music','band2analyze','sub2plot','AllChannelLabels','names4fields');
+    save([data_dir,filesep,'xcorr_' band2analyze '.mat'], ...
+        'rdata_speech','lagdata_speech','rdata_music','lagdata_music', ...
+        'band2analyze','sub2plot','AllChannelLabels','names4fields');
 end
 
 %% Permuted Croscorrelations
