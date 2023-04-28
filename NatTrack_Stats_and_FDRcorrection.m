@@ -27,7 +27,7 @@ else
     load([data_dir,filesep,'xcorr_',band2analyze,'_PERM.mat'])
 end
 
-alpha        = 0.05;  % p value       
+alpha       = 0.05;  % p value       
 FDRcorrect  = 0;     % do FDR correction?   
 n_trials    = size(r_speech{1},2);
 n_conds     = 2;
