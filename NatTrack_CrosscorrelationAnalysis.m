@@ -5,7 +5,7 @@
 % also obtains a null distribution for the crosscorrelation function using
 % a permutation procedure. 
 %
-% Code by Osorio, S. (2023)
+% S.Osorio - 2023
 
 clear, clc,
 
@@ -18,7 +18,7 @@ observed_analysis    = 1;
 % whether to estimate permutated xcorrelations (1 = yes, 0 = no)
 permutation_analysis = 1;
 
-band2analyze = 'SFB';  
+band2analyze = 'HFB';  
 sub2plot    = {'sub-02','sub-03','sub-05','sub-06','sub-10','sub-12','sub-16','sub-18', ...
                 'sub-19','sub-20','sub-22','sub-24','sub-25','sub-26','sub-27','sub-34', ...
                 'sub-36','sub-36HD','sub-39','sub-40','sub-45','sub-45HD','sub-46','sub-48', ...
@@ -36,7 +36,7 @@ load('E:\Matlab\IEEG\Scripts\envelopes_music.mat');
 load('E:\Matlab\IEEG\Scripts\envelopes_speech.mat');
 
 % whether to estimate crosscorrelation in small segments (1) or on the entire signal (0)
-segestimation = 0;
+segestimation = 1;
 fs            = 250;
 n_trials      = length(AllDataStructuresFT{1,1}.trial);
 n_conditions  = size(AllDataStructuresFT,2);                  
@@ -159,7 +159,7 @@ if permutation_analysis == 1
         end
         % permute n times
         for perm_i=1:nperms
-            disp(['Permutation ' num2str(perm_i)]);
+            %disp(['Permutation ' num2str(perm_i)]);
             % shuffle trials for this permutation
             RandTrialOrder = randperm(numel(AllDataStructuresFT{sub_i,1}.trial));
             if segestimation == 1
@@ -231,10 +231,12 @@ if permutation_analysis == 1
     end
     
     if segestimation == 1
+        disp(['saving xcorr_' band2analyze '_windowed_PERM.mat']);
         save([data_dir,filesep,'xcorr_' band2analyze '_windowed_PERM.mat'], ...
             'r_speech_perm','lag_speech_perm','r_music_perm', ...
             'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');
     else
+        disp(['saving xcorr_' band2analyze '_PERM.mat']);
         save([data_dir,filesep,'xcorr_' band2analyze '_PERM.mat'], ...
             'r_speech_perm','lag_speech_perm','r_music_perm', ...
             'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');
