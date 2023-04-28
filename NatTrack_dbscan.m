@@ -1,25 +1,25 @@
-% cd('E:\Matlab\brainstorm3');
-% brainstorm
-% cd('E:\Matlab\IEEG\Scripts');
+% NaturalisticTracking_ECOG project
+%
+% This script plots statistically significant electrodes in common space
+% (MNI) per condition, and conducts a data-driven cluster analysis to identify
+% cortical regions driving statistical effects.
+
+% S.Osorio - 2023
+% initialize brainstorm (for data visualization)
+cd('E:\Matlab\brainstorm3');
+brainstorm
 %%
 clear, clc,
-segestimation     = 1;
+
+% whether to analyze segmented data (1 = yes, 0 = no)
+segestimation     = 0;
 condition2analyze = 'music';
 band2analyze      = 'HFB';
 
-if strcmpi(condition2analyze,'music')
-    colors = [0.7176 0.2745 1.0000; ...
-              0.4902 0.2706 1.0000; ...
-              0.2706 0.3686 1.0000];
-elseif strcmpi(condition2analyze,'speech')
-    colors = [1.0000 0.4118 0.1608; ...
-              1.0000 0.6784 0.1608; ...
-              0.9412 0.8392 0.3373]; 
-elseif strcmpi(condition2analyze,'both')
-    colors = [0.4667 0.6745 0.1882; ...
-              0.1882 0.6706 0.5255; ...
-              0.1882 0.5569 0.6706];    
-end
+% colors per condition (1,:) music, (2,:) speech, (3,:) music and speech
+colors       = [0.7176 0.2745 1.0000; ...
+                0.9412 0.5804 0.3373; ...
+                0.4667 0.6745 0.1882];              
     
 % load data to plot
 if segestimation == 1
@@ -28,29 +28,27 @@ else
     load(['E:\Matlab\IEEG\Data\CROSdata_',band2analyze,'.mat']);
 end    
 
-% locate data in separate variables
+% locate data in separate variables and plot
 rhos4speech = dataMat(:,:,1);
-subeffect   = sum(any(rhos4speech));
-disp(['SPEECH: Statistically significant data in ' num2str(subeffect) ' out of ' num2str(length(sub2plot)) ' subjects'])
-
 rhos4music  = dataMat(:,:,2);
-subeffect   = sum(any(rhos4music));
-disp(['MUSIC: Statistically significant data in ' num2str(subeffect) ' out of ' num2str(length(sub2plot)) ' subjects'])
 
-% Plot MNI surface using brainstorm
+% get MNI cortical surface using brainstorm. We will plot data here.
 SurfaceFile   = 'E:\MATLAB\brainstorm_db\iEEG\anat\@default_subject\tess_cortex_pial_low.mat'; %['C:\Users\andre\OneDrive\Documentos\MATLAB\brainstorm_db\iEEG\anat\' sub2plot '\tess_cortex_central_low.mat'];
 %%
+
+n_subs  = length(sub2plot);
+n_elecs = length(dataMat);
+
+% first, we get the info we need and put it in a single array 
 if strcmpi(condition2analyze,'speech')
     counter = 1;
-    
-    for sub_i=1:length(sub2plot)
-        
+    for sub_i=1:n_subs    
+        % get the subject structure with electrode info
         clear ThisSubStruct
-        ThisSubStruct = cell2struct(AllChannelLabels{sub_i},names4fields,2);
-        
-        for idx=1:length(dataMat)
-            if ~isnan(rhos4speech(idx,sub_i)) %&& isnan(rhos4music(idx,sub_i)) %%
-                %             test(sub_i,idx,:)    = [ThisSubStruct(idx).Loc(1),ThisSubStruct(idx).Loc(2),ThisSubStruct(idx).Loc(3)];
+        ThisSubStruct = cell2struct(AllChannelLabels{sub_i},names4fields,2);    
+        for idx=1:n_elecs
+            % electrodes selective to speech 
+            if ~isnan(rhos4speech(idx,sub_i))
                 testMat(counter,:)   = [ThisSubStruct(idx).Loc(1),ThisSubStruct(idx).Loc(2),ThisSubStruct(idx).Loc(3)];
                 ValRange(counter,:)  = rhos4speech(idx,sub_i);
                 subIDelec(counter,:) = [sub_i,idx];
@@ -59,16 +57,13 @@ if strcmpi(condition2analyze,'speech')
         end
     end    
 elseif strcmpi(condition2analyze,'music')    
-    counter = 1;    
-    
-    for sub_i=1:length(sub2plot)
-        
+    counter = 1;   
+    for sub_i=1:n_subs       
         clear ThisSubStruct
         ThisSubStruct = cell2struct(AllChannelLabels{sub_i},names4fields,2);
-        
-        for idx=1:length(dataMat)
-            if  ~isnan(rhos4music(idx,sub_i)) %% isnan(rhos4speech(idx,sub_i)) &&
-                %             test(sub_i,idx,:)    = [ThisSubStruct(idx).Loc(1),ThisSubStruct(idx).Loc(2),ThisSubStruct(idx).Loc(3)];
+        for idx=1:n_elecs
+            % electrodes selective to music
+            if  ~isnan(rhos4music(idx,sub_i))
                 testMat(counter,:)   = [ThisSubStruct(idx).Loc(1),ThisSubStruct(idx).Loc(2),ThisSubStruct(idx).Loc(3)];
                 ValRange(counter,:)  = rhos4speech(idx,sub_i);
                 subIDelec(counter,:) = [sub_i,idx];
@@ -77,16 +72,13 @@ elseif strcmpi(condition2analyze,'music')
         end
     end  
 elseif strcmpi(condition2analyze,'both')
-    counter = 1;    
-    
-    for sub_i=1:length(sub2plot)
-        
+    counter = 1;     
+    for sub_i=1:n_subs       
         clear ThisSubStruct
-        ThisSubStruct = cell2struct(AllChannelLabels{sub_i},names4fields,2);
-        
-        for idx=1:length(dataMat)
+        ThisSubStruct = cell2struct(AllChannelLabels{sub_i},names4fields,2);    
+        for idx=1:n_elecs
+            % electrodes selective to bot speech and music
             if  ~isnan(rhos4music(idx,sub_i)) && ~isnan(rhos4speech(idx,sub_i)) 
-                %             test(sub_i,idx,:)    = [ThisSubStruct(idx).Loc(1),ThisSubStruct(idx).Loc(2),ThisSubStruct(idx).Loc(3)];
                 testMat(counter,:)   = [ThisSubStruct(idx).Loc(1),ThisSubStruct(idx).Loc(2),ThisSubStruct(idx).Loc(3)];
                 ValRange(counter,:)  = rhos4speech(idx,sub_i);
                 subIDelec(counter,:) = [sub_i,idx];
@@ -96,14 +88,22 @@ elseif strcmpi(condition2analyze,'both')
     end  
 end
 
-% close
+% plot the cortical surface
 [hFig, iDS, iFig] = view_surface(SurfaceFile);
 hFig.Color = [1 1 1];
 hold on;
 
+% plot all electrodes (Net effect, without cluster analysis)
 sh  = scatter3(testMat(:,1),testMat(:,2),testMat(:,3),60,'filled');
 sh.MarkerFaceAlpha = .8;
 sh.SizeData = 100;
+if strcmpi(condition2analyze,'music')
+    sh.CData = colors(1,:); 
+elseif strcmpi(condition2analyze,'speech')
+    sh.CData = colors(1,:); 
+elseif strcmpi(condition2analyze,'both')
+    sh.CData = colors(1,:); 
+end 
 
 %%
 clear testClusters prctelecs numclusters numoutliers
@@ -145,7 +145,22 @@ end
 title([condition2analyze ' - ' band4title],'FontWeight','normal')
 box off
 %%
-mindist   = 0.02;
+% colors for different clusters within conditions
+if strcmpi(condition2analyze,'music')
+    colors = [0.7176 0.2745 1.0000; ...
+              0.4902 0.2706 1.0000; ...
+              0.2706 0.3686 1.0000];
+elseif strcmpi(condition2analyze,'speech')
+    colors = [1.0000 0.4118 0.1608; ...
+              1.0000 0.6784 0.1608; ...
+              0.9412 0.8392 0.3373]; 
+elseif strcmpi(condition2analyze,'both')
+    colors = [0.4667 0.6745 0.1882; ...
+              0.1882 0.6706 0.5255; ...
+              0.1882 0.5569 0.6706];    
+end
+
+mindist   = 0.028;
 minpoints = 12;
 
 testClusters = dbscan(testMat,mindist,minpoints);
