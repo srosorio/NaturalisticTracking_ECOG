@@ -1,7 +1,9 @@
 % NaturalisticTracking_ECOG project
 %
 % This code estimates the critical correlation coefficient value corresponding  
-% to p = 0.05 and performs FDR correction for observed p values for each subject
+% to a = 0.05 and performs FDR correction for observed p values for each
+% subject. It also plots the total number of electrodes that survive
+% statistics and saves a table with this same info at the subject level.
 
 % S.Osorio - 2023
 
@@ -17,6 +19,8 @@ band2analyze  = 'SFB';
 segestimation = 0;
 % plot histogram of FDR-corrected p values (1 = yes, 0 = no)
 plot_FDR      = 0;
+% plot number of electrodes per condition (1 = yes, 0 = no)
+plot_bars     = 1;
 
 % load data
 if segestimation == 1
@@ -201,4 +205,37 @@ if segestimation == 1
 else
     save([data_dir,filesep,'CROSdata_' band2analyze '.mat'],  ...
         'dataMat','LagMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
+end
+
+% bar plots for total number of electrodes per condition
+if plot_bars == 1
+
+    ElecsperSub_Speech = sum(~isnan(dataMat(:,:,1)));
+    ElecsperSub_Music  = sum(~isnan(dataMat(:,:,2)));
+    ElecsperSub_Both   = sum(~isnan(dataMat(:,:,1)) & ~isnan(dataMat(:,:,2)));
+    
+    % save data
+    save([data_dir,filesep,'ElecsPerSub_',band2analyze],'ElecsperSub_Speech','ElecsperSub_Music','ElecsperSub_Both')
+    
+    % create bar plot
+    colors = [0.7176 0.2745 1.0000; ...
+              1.0000 0.4118 0.1608; ...
+              0.4667 0.6745 0.1882];    
+    ElecsPerSub = [ElecsperSub_Music',ElecsperSub_Speech',ElecsperSub_Both'];
+    
+    figure(1), clf
+    bh1 = bar(sum(ElecsPerSub),'FaceColor','flat');
+    bh1.CData = colors;
+    bh1.EdgeColor = [1 1 1];
+    ylim([0 250]);
+    xticklabels({'Music','Speech','Both'});
+    xtickangle(45);
+    ylabel('Electrode count');
+    set(gca,'FontSize',20,'FontName','Arial');
+    title(band2analyze,'FontWeight','normal');
+    box off
+    
+    % save number of electrodes per subject as a table
+    ElecsPersSub = array2table(ElecsPerSub,'RowNames',sub2plot,'VariableNames',{'Music','Speech','Both'});
+    writetable(ElecsPersSub,[data_dir,filesep,'ElecsPerSub_',band2analyze,'.xlsx'])
 end
