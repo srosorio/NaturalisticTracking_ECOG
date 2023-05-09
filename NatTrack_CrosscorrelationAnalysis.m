@@ -16,7 +16,7 @@ data_dir = [iEEG_dir,filesep,'Data'];
 % wheter to estimate observed xcorrelations (1 = yes, 0 = no)
 observed_analysis    = 1;
 % whether to estimate permutated xcorrelations (1 = yes, 0 = no)
-permutation_analysis = 1;
+permutation_analysis = 0;
 
 band2analyze = 'HFB';  
 sub2plot    = {'sub-02','sub-03','sub-05','sub-06','sub-10','sub-12','sub-16','sub-18', ...
@@ -36,7 +36,7 @@ load('E:\Matlab\IEEG\Scripts\envelopes_music.mat');
 load('E:\Matlab\IEEG\Scripts\envelopes_speech.mat');
 
 % whether to estimate crosscorrelation in small segments (1) or on the entire signal (0)
-segestimation = 1;
+segestimation = 0;
 fs            = 250;
 n_trials      = length(AllDataStructuresFT{1,1}.trial);
 n_conditions  = size(AllDataStructuresFT,2);                  
