@@ -12,11 +12,11 @@
 %%
 clear, clc, close
 condition2analyze = 'music'; % 'speech' or 'music'
-band2analyze      = 'SFB';   % SFB (1-8 Hz) or HFB (70-120 Hz) 
+band2analyze      = 'HFB';   % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;       % whether to use windowed data
-plot_oncortex     = 1;       % whether to plot effect on cortical surface
-plot_histogram    = 0;       % whether to plot histogram of plotted values
-effect2plot       = 'lag';   % rho (corrcoefficients) or lag (xcorr lags)
+plot_oncortex     = 0;       % whether to plot effect on cortical surface
+plot_histogram    = 1;       % whether to plot histogram of plotted values
+effect2plot       = 'rho';   % rho (corrcoefficients) or lag (xcorr lags)
 
 % load data to plot
 if segestimation == 1
@@ -29,15 +29,15 @@ end
 % interest. These values were estimated in NatTrack_dbscan. Make sure they
 % match the optimal parameters found in that script. 
 if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.018; minpoints = 12;
+        mindist = 0.018; minpoints = 14;
 elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-        mindist = 0.010; minpoints = 12;
+        mindist = 0.010; minpoints = 16;
 elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
         mindist = 0.024; minpoints = 12;
 elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.018; minpoints = 12;
+        mindist = 0.016; minpoints = 16;
 elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.018; minpoints = 12;
+        mindist = 0.012; minpoints = 12;
 end
 
 % locate data in separate variables and plot
@@ -110,7 +110,7 @@ if plot_oncortex == 1
     ch = colorbar;
     if strcmpi(effect2plot,'rho')
         ch.Label.String = 'Rho';
-        caxis([0.085 .13]);  % caxis values will likely need to be adjusted manually
+        caxis([0.05 .10]);  % caxis values will likely need to be adjusted manually
     else
         ch.Label.String = 'Lag (ms)';
         caxis([-250 250]);
@@ -127,7 +127,7 @@ if plot_histogram == 1
                0.4667 0.6745 0.1882];  
            
     figure,clf
-    hh = histogram(ValRange,5);
+    hh = histogram(ValRange,4);
     if strcmpi(effect2plot,'rho')
         ylabel('Electrode count'); ylim([0 30]);
         xlabel('Correlation coefficient'); xlim([0 0.3]);
@@ -145,3 +145,19 @@ if plot_histogram == 1
     set(gca,'FontSize',20,'FontName','Arial');
     box off
 end
+
+% print some statistics
+disp(['N = ' num2str(length(ValRange))]);
+if strcmpi(effect2plot,'rho')
+    disp(['Median rho = ' num2str(median(ValRange))]);
+else
+    disp(['Median lag = ' num2str(median(ValRange))]);
+end
+disp(['SD = ' num2str(std(ValRange))]);
+if strcmpi(condition2analyze,'music')
+    pvals = PValMat(:,:,2);
+else
+    pvals = PValMat(:,:,1);
+end
+pvals = pvals(~isnan(pvals));
+disp(['Mean p = ' num2str(mean(pvals))]);

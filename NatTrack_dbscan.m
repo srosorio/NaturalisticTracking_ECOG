@@ -10,29 +10,30 @@
 cd('E:\Matlab\brainstorm3');
 brainstorm
 %%
-clear, clc,
+clear, clc, close
 
 % whether to analyze segmented data (1 = yes, 0 = no)
 segestimation     = 0;
 plot_neteffect    = 0;
-dbscan_param      = 0;
-plot_clusters     = 1;
+dbscan_param      = 1;
+plot_clusters     = 0;
 condition2analyze = 'music';
-band2analyze      = 'SFB';
+band2analyze      = 'HFB';
 
 % these are the parameters for dbscan clustering (previously obtained using
 % dbscan_param option)
 if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.018; minpoints = 14;
+        mindist = 0.014; minpoints = 14;
 elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-        mindist = 0.012; minpoints = 14;
+        mindist = 0.01; minpoints = 16;
 elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
         mindist = 0.024; minpoints = 12;
 elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 14;
+        mindist = 0.016; minpoints = 16;
 elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 14;
+        mindist = 0.012; minpoints = 12;
 end
+
 
 % colors per condition (1,:) music, (2,:) speech, (3,:) music and speech
 colors       = [0.7176 0.2745 1.0000; ...
@@ -152,13 +153,16 @@ if dbscan_param == 1
             end
         end
     end
+    
+    opt_idx = prctelecs ./ (dsts) - (prctelecs ./ points');
+    max_val = max(max(opt_idx));
     % plot data
     figure(3), clf
-    plot(dsts,(prctelecs ./ (dsts*100) - (prctelecs ./ points')) / 100,'LineWidth',1.5)
-    ylabel('A.U.');
-    xlabel('\epsilon');
-    legend(num2str(points')); legend boxoff
-    ylim([0 1]); set(gca,'FontSize',22);
+    plot(dsts,opt_idx / max_val,'LineWidth',1.5)
+    ylabel('OI_{norm}');
+    xlabel('epsilon');
+    legend(num2str(points'),'Location','SouthEast'); legend boxoff
+    ylim([0 1.02]); set(gca,'FontSize',20);
     title([condition2analyze ' - ' band2analyze],'FontWeight','normal')
     box off
 end
