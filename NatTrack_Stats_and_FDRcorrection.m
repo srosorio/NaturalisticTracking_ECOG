@@ -14,7 +14,7 @@ iEEG_dir = 'E:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
 % SFB (1-8 Hz) or HFB (70-120 Hz)
-band2analyze  = 'SFB';
+band2analyze  = 'HFB';
 % use sliding window data (1 = yes, 0 = no)
 segestimation = 0;
 % plot histogram of FDR-corrected p values (1 = yes, 0 = no)
@@ -188,8 +188,10 @@ for sub_i=1:size(r_data,1)
 
     dataMat(1:length(tmpSpeech),sub_i,1) = tmpSpeech;
     LagMat(isnan(r_data{sub_i,1}),sub_i,1) = NaN;
+    PValMat(isnan(r_data{sub_i,1}),sub_i,1) = NaN;
     dataMat(1:length(tmpMusic),sub_i,2)  = tmpMusic;    
     LagMat(isnan(r_data{sub_i,2}),sub_i,2) = NaN;
+    PValMat(isnan(r_data{sub_i,2}),sub_i,2) = NaN;
 end
 
 % print how many subjects show a statistically significant effect per condition
@@ -201,10 +203,10 @@ disp(['MUSIC: Statistically significant data in ' num2str(subeffect) ' out of ' 
 % save data
 if segestimation == 1
     save([data_dir,filesep,'CROSdata_' band2analyze '_windowed.mat'],  ... 
-    'dataMat','LagMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
+    'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
 else
     save([data_dir,filesep,'CROSdata_' band2analyze '.mat'],  ...
-        'dataMat','LagMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
+        'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
 end
 
 % bar plots for total number of electrodes per condition
@@ -222,6 +224,28 @@ if plot_bars == 1
               1.0000 0.4118 0.1608; ...
               0.4667 0.6745 0.1882];    
     ElecsPerSub = [ElecsperSub_Music',ElecsperSub_Speech',ElecsperSub_Both'];
+    
+    % let's create a table with basic statistics
+    RhosMusic  = dataMat(:,:,2);
+    RhosMusic  = RhosMusic(~isnan(RhosMusic));
+    RhosSpeech = dataMat(:,:,1);
+    RhosSpeech = RhosSpeech(~isnan(RhosSpeech));
+    pMusic     = PValMat(:,:,2);
+    pMusic     = pMusic(~isnan(dataMat(:,:,2)));
+    pSpeech    = PValMat(:,:,1);
+    pSpeech    = pSpeech(~isnan(dataMat(:,:,1)));
+    RhosBoth   = dataMat(~isnan(dataMat));
+    pBoth      = PValMat(~isnan(dataMat));
+    
+    disp(['N music = ' num2str(length(RhosMusic))]);
+    disp(['N speech = ' num2str(length(RhosSpeech))]);
+
+    StatsTable = table([mean(RhosMusic); std(RhosMusic); mean(pMusic)], ...
+                       [mean(RhosSpeech);std(RhosSpeech);mean(pSpeech)], ...
+                       [mean(RhosBoth); std(RhosBoth); mean(pBoth)], ...
+                       'VariableNames',{'Music','Speech','Both'}, ...
+                       'RowNames',{'mean rho','SD rho','mean p'});
+    display(StatsTable);
     
     figure(1), clf
     bh1 = bar(sum(ElecsPerSub),'FaceColor','flat');
