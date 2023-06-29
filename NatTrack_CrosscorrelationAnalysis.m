@@ -16,7 +16,7 @@ data_dir = [iEEG_dir,filesep,'Data'];
 % wheter to estimate observed xcorrelations (1 = yes, 0 = no)
 observed_analysis    = 1;
 % whether to estimate permutated xcorrelations (1 = yes, 0 = no)
-permutation_analysis = 0;
+permutation_analysis = 1;
 
 band2analyze = 'HFB';  
 sub2plot    = {'sub-02','sub-03','sub-05','sub-06','sub-10','sub-12','sub-16','sub-18', ...
@@ -37,6 +37,7 @@ load('E:\Matlab\IEEG\Scripts\envelopes_speech.mat');
 
 % whether to estimate crosscorrelation in small segments (1) or on the entire signal (0)
 segestimation = 0;
+perm_type     = 'wn'; % 'wn' white noise, 'ts' trial shuffling
 fs            = 250;
 n_trials      = length(AllDataStructuresFT{1,1}.trial);
 n_conditions  = size(AllDataStructuresFT,2);                  
@@ -118,29 +119,29 @@ if observed_analysis == 1
                     brain_signal     = AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:);
                     acoustic_signal  = envelope_speech(trial_i,:);
                     [tempr,templags] = xcorr(zscore(brain_signal), ...
-                                             zscore(acoustic_signal),maxlag,'normalized');
+                        zscore(acoustic_signal),maxlag,'normalized');
                     r_speech{sub_i}(elec_i,trial_i,:)    = max(tempr);
                     lag_speech{sub_i}(elec_i,trial_i,:)  = templags(tempr == max(tempr));
                     % music
                     brain_signal     = AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,:);
                     acoustic_signal  = envelope_music(trial_i,:);
                     [tempr,templags] = xcorr(zscore(brain_signal), ...
-                                             zscore(acoustic_signal),maxlag,'normalized');
+                        zscore(acoustic_signal),maxlag,'normalized');
                     r_music{sub_i}(elec_i,trial_i,:)    = max(tempr);
                     lag_music{sub_i}(elec_i,trial_i,:)  = templags(tempr == max(tempr));
                 end
             end
         end
     end
-    if segestimation == 1
-        save([data_dir,filesep,'xcorr_' band2analyze '_windowed.mat'], ...
-            'r_speech','lag_speech','r_music','lag_music', ...
-            'band2analyze','sub2plot','AllChannelLabels','names4fields');
-    else
-        save([data_dir,filesep,'xcorr_' band2analyze '.mat'], ...
-            'r_speech','lag_speech','r_music','lag_music', ...
-            'band2analyze','sub2plot','AllChannelLabels','names4fields');
-    end
+%     if segestimation == 1
+%         save([data_dir,filesep,'xcorr_' band2analyze '_windowed.mat'], ...
+%             'r_speech','lag_speech','r_music','lag_music', ...
+%             'band2analyze','sub2plot','AllChannelLabels','names4fields');
+%     else
+%         save([data_dir,filesep,'xcorr_' band2analyze '.mat'], ...
+%             'r_speech','lag_speech','r_music','lag_music', ...
+%             'band2analyze','sub2plot','AllChannelLabels','names4fields');
+%     end
 end
 
 % Permuted Croscorrelations
@@ -210,35 +211,58 @@ if permutation_analysis == 1
                 % if xcorr on entire segment
                 for trial_i=1:n_trials
                     for elec_i=1:n_electrodes
-                        % speech
-                        brain_signal     = AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:);
-                        acoustic_signal  = envelope_speech(RandTrialOrder(trial_i),:);
-                        [tempr,templags] = xcorr(zscore(brain_signal), ... 
-                                                 zscore(acoustic_signal),maxlag,'normalized');
-                        r_speech_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
-                        lag_speech_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
-                        % music
-                        brain_signal     = AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,:);
-                        acoustic_signal  = envelope_music(RandTrialOrder(trial_i),:);
-                        [tempr,templags] = xcorr(zscore(brain_signal), ...
-                                                 zscore(acoustic_signal),maxlag,'normalized');
-                        r_music_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
-                        lag_music_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
+                        if strcmpi(perm_type,'ts')
+                            % speech
+                            brain_signal     = AllDataStructuresFT{sub_i,1}.trial{trial_i}(elec_i,:);
+                            acoustic_signal  = envelope_speech(RandTrialOrder(trial_i),:);
+                            [tempr,templags] = xcorr(zscore(brain_signal), ...
+                                zscore(acoustic_signal),maxlag,'normalized');
+                            r_speech_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
+                            lag_speech_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
+                            % music
+                            brain_signal     = AllDataStructuresFT{sub_i,2}.trial{trial_i}(elec_i,:);
+                            acoustic_signal  = envelope_music(RandTrialOrder(trial_i),:);
+                            [tempr,templags] = xcorr(zscore(brain_signal), ...
+                                zscore(acoustic_signal),maxlag,'normalized');
+                            r_music_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
+                            lag_music_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
+                        elseif strcmpi(perm_type,'wn')
+                            acoustic_signal  = envelope_speech(RandTrialOrder(trial_i),:);
+                            brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),[70,120],1000)));
+                            [tempr,templags] = xcorr(zscore(brain_signal), ...
+                                zscore(acoustic_signal),maxlag,'normalized');
+                            r_speech_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
+                            lag_speech_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
+                            % music
+                            acoustic_signal  = envelope_music(RandTrialOrder(trial_i),:);
+                            brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),[70,120],1000)));
+                            [tempr,templags] = xcorr(zscore(brain_signal), ...
+                                zscore(acoustic_signal),maxlag,'normalized');
+                            r_music_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
+                            lag_music_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
+                        end
                     end
                 end
             end
         end
-    end
-    
+    end    
+    % save data
     if segestimation == 1
         disp(['saving xcorr_' band2analyze '_windowed_PERM.mat']);
         save([data_dir,filesep,'xcorr_' band2analyze '_windowed_PERM.mat'], ...
             'r_speech_perm','lag_speech_perm','r_music_perm', ...
             'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');
     else
-        disp(['saving xcorr_' band2analyze '_PERM.mat']);
-        save([data_dir,filesep,'xcorr_' band2analyze '_PERM.mat'], ...
-            'r_speech_perm','lag_speech_perm','r_music_perm', ...
-            'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');
+        if strcmpi(perm_type,'ts')
+            disp(['saving xcorr_' band2analyze '_PERM.mat']);
+            save([data_dir,filesep,'xcorr_' band2analyze '_PERM.mat'], ...
+                'r_speech_perm','lag_speech_perm','r_music_perm', ...
+                'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');
+        else
+            disp(['saving xcorr_' band2analyze '_PERM.mat']);
+            save([data_dir,filesep,'xcorr_' band2analyze '_WN_PERM.mat'], ...
+                'r_speech_perm','lag_speech_perm','r_music_perm', ...
+                'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');     
+        end
     end
 end
