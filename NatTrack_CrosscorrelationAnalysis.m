@@ -40,9 +40,18 @@ segestimation = 0;
 perm_type     = 'wn'; % 'wn' white noise, 'ts' trial shuffling
 fs            = 250;
 n_trials      = length(AllDataStructuresFT{1,1}.trial);
-n_conditions  = size(AllDataStructuresFT,2);                  
-nperms        = factorial(n_trials);
-maxlag        = 400;
+n_conditions  = size(AllDataStructuresFT,2);
+maxlag        = 300;
+if strcmpi(perm_type,'ts')
+    nperms = factorial(n_trials);
+elseif strcmpi(perm_type,'wn')
+    nperms = 1000;
+end
+if strcmpi(band2analyze,'SFB')
+    bands4filt = [1,8];
+elseif strcmpi(band2analyze,'HFB')
+    bands4filt = [70,120];
+end 
 
 %initialize cell arays for the data we need
 [r_music,lag_music,r_speech,lag_speech] = deal(cell(1,length(sub2plot)));
@@ -146,6 +155,7 @@ end
 
 % Permuted Croscorrelations
 if permutation_analysis == 1
+    tic
     for sub_i=1:length(sub2plot)
         disp(['Estimating crosscorrelation for subject ' num2str(sub_i)]);
         n_electrodes = size(AllDataStructuresFT{sub_i,1}.trial{1},1); % number of electrodes
@@ -228,14 +238,14 @@ if permutation_analysis == 1
                             lag_music_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
                         elseif strcmpi(perm_type,'wn')
                             acoustic_signal  = envelope_speech(RandTrialOrder(trial_i),:);
-                            brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),[70,120],1000)));
+                            brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),bands4filt,200)));
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
                                 zscore(acoustic_signal),maxlag,'normalized');
                             r_speech_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
                             lag_speech_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
                             % music
                             acoustic_signal  = envelope_music(RandTrialOrder(trial_i),:);
-                            brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),[70,120],1000)));
+                            brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),bands4filt,200)));
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
                                 zscore(acoustic_signal),maxlag,'normalized');
                             r_music_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
@@ -245,7 +255,9 @@ if permutation_analysis == 1
                 end
             end
         end
-    end    
+        toc
+    end 
+    
     % save data
     if segestimation == 1
         disp(['saving xcorr_' band2analyze '_windowed_PERM.mat']);
@@ -260,7 +272,7 @@ if permutation_analysis == 1
                 'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');
         else
             disp(['saving xcorr_' band2analyze '_PERM.mat']);
-            save([data_dir,filesep,'xcorr_' band2analyze '_WN_PERM.mat'], ...
+            save([data_dir,filesep,'xcorr_' band2analyze '_whitenoise_PERM.mat'], ...
                 'r_speech_perm','lag_speech_perm','r_music_perm', ...
                 'lag_music_perm','band2analyze','sub2plot','AllChannelLabels','names4fields');     
         end
