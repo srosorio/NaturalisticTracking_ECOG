@@ -14,7 +14,7 @@ iEEG_dir = 'E:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
 % wheter to estimate observed xcorrelations (1 = yes, 0 = no)
-observed_analysis    = 1;
+observed_analysis    = 0;
 % whether to estimate permutated xcorrelations (1 = yes, 0 = no)
 permutation_analysis = 1;
 
@@ -152,11 +152,10 @@ if observed_analysis == 1
 %             'band2analyze','sub2plot','AllChannelLabels','names4fields');
 %     end
 end
-
+tic
 % Permuted Croscorrelations
 if permutation_analysis == 1
-    tic
-    for sub_i=1:length(sub2plot)
+    for sub_i=1:1 %length(sub2plot)
         disp(['Estimating crosscorrelation for subject ' num2str(sub_i)]);
         n_electrodes = size(AllDataStructuresFT{sub_i,1}.trial{1},1); % number of electrodes
         % trim signal length if not already done
@@ -169,7 +168,7 @@ if permutation_analysis == 1
             end
         end
         % permute n times
-        for perm_i=1:nperms
+        for perm_i=1:1 %nperms
             %disp(['Permutation ' num2str(perm_i)]);
             % shuffle trials for this permutation
             RandTrialOrder = randperm(numel(AllDataStructuresFT{sub_i,1}.trial));
@@ -220,6 +219,7 @@ if permutation_analysis == 1
             else
                 % if xcorr on entire segment
                 for trial_i=1:n_trials
+                    disp(['Trial ' num2str(trial_i)])
                     for elec_i=1:n_electrodes
                         if strcmpi(perm_type,'ts')
                             % speech
@@ -237,14 +237,14 @@ if permutation_analysis == 1
                             r_music_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
                             lag_music_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
                         elseif strcmpi(perm_type,'wn')
-                            acoustic_signal  = envelope_speech(RandTrialOrder(trial_i),:);
+                            acoustic_signal  = envelope_speech(trial_i,:);
                             brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),bands4filt,200)));
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
                                 zscore(acoustic_signal),maxlag,'normalized');
                             r_speech_perm{sub_i}(elec_i,trial_i,:,perm_i) = max(tempr);
                             lag_speech_perm{sub_i}(elec_i,trial_i,:,perm_i)= templags(tempr == max(tempr));
                             % music
-                            acoustic_signal  = envelope_music(RandTrialOrder(trial_i),:);
+                            acoustic_signal  = envelope_music(trial_i,:);
                             brain_signal     = abs(hilbert(bandpass(wgn(1,length(acoustic_signal),1),bands4filt,200)));
                             [tempr,templags] = xcorr(zscore(brain_signal), ...
                                 zscore(acoustic_signal),maxlag,'normalized');
@@ -255,9 +255,8 @@ if permutation_analysis == 1
                 end
             end
         end
-        toc
     end 
-    
+    toc
     % save data
     if segestimation == 1
         disp(['saving xcorr_' band2analyze '_windowed_PERM.mat']);
