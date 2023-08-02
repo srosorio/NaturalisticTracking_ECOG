@@ -1,11 +1,11 @@
 clear, clc,
 
-addpath('E:\Matlab\fieldtrip-20210709');
-addpath('E:\Matlab\IEEG\Scripts\NSL');
+addpath('F:\Matlab\fieldtrip-20210709');
+addpath('F:\Matlab\IEEG\Scripts\NSL');
 ft_defaults;
 
 % create a directory to save data
-iEEG_dir = 'E:\Matlab\IEEG';
+iEEG_dir = 'F:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
 if ~isfolder(data_dir)
@@ -20,26 +20,7 @@ sub2plot = {'sub-02','sub-03','sub-05','sub-06','sub-10','sub-12','sub-16','sub-
             
 % frequency band to analyze (SLB or HFB)
 band2analyze = 'SFB';  
-AllECOGData  = cell(length(sub2plot),3);
-fs           = 250;
-% windowlength = 2 * fs; % use sliding windows of 5 seconds
 lowfreqs     = [1 8];
-highfreqs    = [70 120];
-PLVwin       = 2;
-PLVoverlap   = 1;
-nperms       = 100;
-segestimation = 0;
-maxlag       = 400;
-
-% load envelope data
-load('E:\Matlab\IEEG\Scripts\envelopes_music.mat');
-load('E:\Matlab\IEEG\Scripts\envelopes_speech.mat');
-
-%bandpass envelopes if working with 1-8 Hz data
-if strcmpi(band2analyze,'SFB')
-    envelope_music  = bandpass(envelope_music',lowfreqs,200,'Steepness',[0.75 .75])';
-    envelope_speech = bandpass(envelope_speech',lowfreqs,200,'Steepness',[0.75 .75])';
-end
 
 % initialize a couple of cell arrays to store data
 AllDataStructuresFT = cell(length(sub2plot),2);
@@ -47,7 +28,7 @@ AllChannelLabels    = cell(length(sub2plot),1);
 
 for sub_i=1:length(sub2plot)
     % get data from brainstorm database
-    cd(['E:\Matlab\brainstorm_db\iEEG\data\' sub2plot{sub_i}]);
+    cd(['F:\Matlab\brainstorm_db\iEEG\data\' sub2plot{sub_i}]);
     FileTask = dir([sub2plot{sub_i} '*film*']);
 
     % make sure to keep only good channels
@@ -63,7 +44,7 @@ for sub_i=1:length(sub2plot)
     % delete channels that won't be included from the ChannelFlag list
     clear ChannelFlag Channel
     
-    cd(['E:\Matlab\IEEG\' sub2plot{sub_i}]);
+    cd(['F:\Matlab\IEEG\' sub2plot{sub_i}]);
     
     %% Data preprocessing
     cfg                     = [];

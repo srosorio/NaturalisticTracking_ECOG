@@ -7,44 +7,64 @@
 % S.Osorio - 2023
 
 % initialize brainstorm (for data visualization)
-cd('E:\Matlab\brainstorm3');
+cd('F:\Matlab\brainstorm3');
 brainstorm
 %%
 clear, clc, close
 
-% whether to analyze segmented data (1 = yes, 0 = no)
-segestimation     = 0;
-plot_neteffect    = 0;
-dbscan_param      = 1;
-plot_clusters     = 0;
-condition2analyze = 'music';
+% -------------------------------------------------------------------------
+%                             SET PARAMETERS
+% -------------------------------------------------------------------------
+segestimation     = 0;  % wether to use segmented data
+plot_neteffect    = 0;  % plot effect prior to statistics
+dbscan_param      = 0;  % plot dbscan optimization process
+plot_clusters     = 1;  % only after dbscan optimization
+condition2analyze = 'speech';
 band2analyze      = 'HFB';
+perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
 
-% these are the parameters for dbscan clustering (previously obtained using
-% dbscan_param option)
-if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
+% these are the parameters after optimization per condition and freq band
+if strcmpi(perm_type,'ts') 
+    % if using trial shuffling permutations
+    if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
         mindist = 0.014; minpoints = 14;
-elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
+    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
         mindist = 0.01; minpoints = 16;
-elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
+    elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
         mindist = 0.024; minpoints = 12;
-elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
         mindist = 0.016; minpoints = 16;
-elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+        mindist = 0.006; minpoints = 18;
+    end
+else
+    %if using whitenoise permutations
+    if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
+        mindist = 0.014; minpoints = 14;
+    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
+        mindist = 0.006; minpoints = 16;
+    elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
+        mindist = 0.016; minpoints = 12;
+    elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'SFB')
+        mindist = 0.01; minpoints = 12;
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
         mindist = 0.012; minpoints = 12;
+    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+        mindist = 0.004; minpoints = 12;
+    end
 end
-
+% ------------------- nothing to change from here on ----------------------
 
 % colors per condition (1,:) music, (2,:) speech, (3,:) music and speech
-colors       = [0.7176 0.2745 1.0000; ...
-                0.9412 0.5804 0.3373; ...
-                0.4667 0.6745 0.1882];              
+colors  = [0.7176 0.2745 1.0000; ...
+           0.9412 0.5804 0.3373; ...
+           0.4667 0.6745 0.1882];              
     
 % load data to plot
 if segestimation == 1
-    load(['E:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_windowed.mat']);
+    load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_windowed.mat']);
 else
-    load(['E:\Matlab\IEEG\Data\CROSdata_',band2analyze,'.mat']);
+    load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_whitenoise.mat']);
 end    
 
 % locate data in separate variables and plot
@@ -52,7 +72,7 @@ rhos4speech = dataMat(:,:,1);
 rhos4music  = dataMat(:,:,2);
 
 % get MNI cortical surface using brainstorm. We will plot data here.
-SurfaceFile   = 'E:\MATLAB\brainstorm_db\iEEG\anat\@default_subject\tess_cortex_pial_low.mat'; %['C:\Users\andre\OneDrive\Documentos\MATLAB\brainstorm_db\iEEG\anat\' sub2plot '\tess_cortex_central_low.mat'];
+SurfaceFile   = 'F:\MATLAB\brainstorm_db\iEEG\anat\@default_subject\tess_cortex_pial_low.mat'; %['C:\Users\andre\OneDrive\Documentos\MATLAB\brainstorm_db\iEEG\anat\' sub2plot '\tess_cortex_central_low.mat'];
 
 n_subs  = length(sub2plot);
 n_elecs = length(dataMat);
@@ -108,8 +128,14 @@ end
 
 % plot all electrodes (Net effect, without cluster analysis)
 if plot_neteffect == 1
-    % plot the cortical surface
-    [hFig, iDS, iFig] = view_surface(SurfaceFile);
+    % bst will throw an error every time the cortical surface is ploted for
+    % the first time. This try catch statement overrides this error. Close
+    % the loading bar if it doesn't disappear on its own. 
+    try
+        [hFig, iDS, iFig] = view_surface(SurfaceFile);
+    catch
+        [hFig, iDS, iFig] = view_surface(SurfaceFile);
+    end
     hFig.Color = [1 1 1];
     hold on;
     % plot electrodes
@@ -187,7 +213,7 @@ if plot_clusters == 1
     
     % get clusters
     Clusters = dbscan(datamat,mindist,minpoints);
-    tmptable = tabulate(Clusters)
+    tmptable = sortrows(tabulate(Clusters),-3)
     deleteThis   = 0;
     % delete all electrodes that do not belong to the identified cluster or
     % to cluster below the minimum number of electrodes set for the cluster
@@ -195,11 +221,15 @@ if plot_clusters == 1
     if any(tmptable(:,2) < minpoints)
         deleteThis = tmptable(find(tmptable(:,2) < minpoints),1);
     end
-    datamat(Clusters == -1 | Clusters == deleteThis,:,:)   = [];
-    Clusters(Clusters == -1 | Clusters == deleteThis) = [];
+    datamat(ismember(Clusters,[-1; deleteThis]),:,:)   = [];
+    Clusters(ismember(Clusters,[-1; deleteThis])) = [];
     
     % cortical surface
-    [hFig, iDS, iFig] = view_surface(SurfaceFile);
+    try
+        [hFig, iDS, iFig] = view_surface(SurfaceFile);
+    catch
+        [hFig, iDS, iFig] = view_surface(SurfaceFile);
+    end
     hFig.Color = [1 1 1];
     hold on;
     % plot electrodes

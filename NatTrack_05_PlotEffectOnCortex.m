@@ -14,32 +14,32 @@ clear, clc, close
 condition2analyze = 'music'; % 'speech' or 'music'
 band2analyze      = 'HFB';   % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;       % whether to use windowed data
-plot_oncortex     = 0;       % whether to plot effect on cortical surface
+plot_oncortex     = 1;       % whether to plot effect on cortical surface
 plot_histogram    = 1;       % whether to plot histogram of plotted values
 effect2plot       = 'rho';   % rho (corrcoefficients) or lag (xcorr lags)
 
 % load data to plot
 if segestimation == 1
-    load(['E:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_windowed.mat']);
+    load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_windowed.mat']);
 else
-    load(['E:\Matlab\IEEG\Data\CROSdata_',band2analyze,'.mat']);
+    load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_whitenoise.mat']);
 end   
 
 % set clustering parameters according to condition and frequency band of
 % interest. These values were estimated in NatTrack_dbscan. Make sure they
 % match the optimal parameters found in that script. 
-if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.018; minpoints = 14;
-elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-        mindist = 0.010; minpoints = 16;
-elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
-        mindist = 0.024; minpoints = 12;
-elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 16;
-elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.012; minpoints = 12;
-end
-
+% if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
+%         mindist = 0.018; minpoints = 14;
+% elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
+%         mindist = 0.010; minpoints = 16;
+% elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
+%         mindist = 0.024; minpoints = 12;
+% elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
+%         mindist = 0.016; minpoints = 16;
+% elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+%         mindist = 0.012; minpoints = 12;
+% end
+mindist = 0.016; minpoints = 12;
 % locate data in separate variables and plot
 if strcmpi(effect2plot,'rho')
     effect4speech = dataMat(:,:,1);
@@ -50,7 +50,7 @@ elseif strcmpi(effect2plot,'lag')
 end
 
 % get MNI cortical surface using brainstorm. We will plot data here.
-SurfaceFile   = 'E:\MATLAB\brainstorm_db\iEEG\anat\@default_subject\tess_cortex_pial_low.mat';
+SurfaceFile   = 'F:\MATLAB\brainstorm_db\iEEG\anat\@default_subject\tess_cortex_pial_low.mat';
 
 % create arrays containing the data of interest
 if strcmpi(condition2analyze,'speech')
@@ -127,12 +127,12 @@ if plot_histogram == 1
                0.4667 0.6745 0.1882];  
            
     figure,clf
-    hh = histogram(ValRange,4);
+    hh = histogram(ValRange,5);
     if strcmpi(effect2plot,'rho')
-        ylabel('Electrode count'); ylim([0 30]);
+        ylabel('Electrode count'); %ylim([0 30]);
         xlabel('Correlation coefficient'); xlim([0 0.3]);
     else
-        ylabel('Electrode count'); ylim([0 50]);
+        ylabel('Electrode count'); %ylim([0 50]);
         xlabel('Lag (ms)'); xlim([-350 350]);
     end
     if strcmpi(condition2analyze,'music')

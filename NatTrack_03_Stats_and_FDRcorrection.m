@@ -10,11 +10,12 @@
 clear, clc,
 
 % create a directory to save data
-iEEG_dir = 'E:\Matlab\IEEG';
+iEEG_dir = 'F:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
 % SFB (1-8 Hz) or HFB (70-120 Hz)
-band2analyze  = 'HFB';
+band2analyze  = 'SFB';
+white_n       = 1;
 % use sliding window data (1 = yes, 0 = no)
 segestimation = 0;
 % plot histogram of FDR-corrected p values (1 = yes, 0 = no)
@@ -28,11 +29,11 @@ if segestimation == 1
     load([data_dir,filesep,'xcorr_',band2analyze,'_windowed_PERM.mat'])
 else
     load([data_dir,filesep,'xcorr_',band2analyze,'.mat'])
-    load([data_dir,filesep,'xcorr_',band2analyze,'_PERM.mat'])
+    load([data_dir,filesep,'xcorr_',band2analyze,'_whitenoise_PERM.mat'])
 end
 
-alpha       = 0.05;  % p value       
-FDRcorrect  = 0;     % do FDR correction?   
+alpha       = 0.0001;  % p value       
+FDRcorrect  = 1;     % do FDR correction?   
 n_trials    = size(r_speech{1},2);
 n_conds     = 2;
 
@@ -66,7 +67,7 @@ n_subs  = size(sub2plot,2);
 % loop through subjects and electrodes to get corresponding p values
 for sub_i=1:n_subs
     n_elecs  = size(r_speech{sub_i},1);
-    n_perms  = size(r_speech_perm{sub_i},4);
+    n_perms  = length(r_speech_perm{sub_i});
     % obtain the mean p value across trials for each electrode within each subject
     for trial_i=1:n_trials           
         for elec_i=1:n_elecs
@@ -85,11 +86,11 @@ for sub_i=1:n_subs
             % for analysis conducted in the entire signal
             else
                 % speech
-                null_dist   = mean(squeeze(r_speech_perm{sub_i}(elec_i,:,:,:)),1);
+                null_dist   = mean(squeeze(r_speech_perm{sub_i}(elec_i,:,:)),2);
                 observed_r  = mean(r_speech{sub_i}(elec_i,:,:),2);
                 pvals_speech{sub_i}(elec_i,:) = sum(null_dist >= observed_r) / n_perms;
-                % music 
-                null_dist   = mean(squeeze(r_music_perm{sub_i}(elec_i,:,:,:)),1);
+                % music
+                null_dist   = squeeze(mean(r_music_perm{sub_i}(elec_i,:,:),2));
                 observed_r  = mean(r_music{sub_i}(elec_i,:,:),2);
                 pvals_music{sub_i}(elec_i,:)  = sum(null_dist >= observed_r) / n_perms;
             end
@@ -108,8 +109,8 @@ for sub_i=1:n_subs
     end
 	% implement FDR correction (this is done within each subject)
     if FDRcorrect == 1
-        fdr_speech{sub_i} = mafdr(pvals_speech{sub_i},'lambda',0.15);
-        fdr_music{sub_i}  = mafdr(pvals_music{sub_i},'lambda',0.15);
+        fdr_speech{sub_i} = mafdr(pvals_speech{sub_i},'BHFDR',1);
+        fdr_music{sub_i}  = mafdr(pvals_music{sub_i},'BHFDR',1);
     else
         fdr_speech{sub_i} = pvals_speech{sub_i};
         fdr_music{sub_i}  = pvals_music{sub_i};
@@ -130,7 +131,14 @@ for sub_i=1:n_subs
     lags_speech{sub_i} = mean(mean(lag_speech{sub_i},3),2);
     lags_music{sub_i}  = mean(mean(lag_music{sub_i},3),2);
 end
-
+figure(1)
+suptitle('speech - no correction')
+figure(2)
+suptitle('music - no correction')
+figure(3)
+suptitle('speech - corrected')
+figure(4)
+suptitle('music - corrected')
 for sub_i=1:n_subs
     % find number of electrodes per subject
     matlength(sub_i) = numel(fdr_speech{sub_i});    
@@ -205,7 +213,7 @@ if segestimation == 1
     save([data_dir,filesep,'CROSdata_' band2analyze '_windowed.mat'],  ... 
     'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
 else
-    save([data_dir,filesep,'CROSdata_' band2analyze '.mat'],  ...
+    save([data_dir,filesep,'CROSdata_' band2analyze '_whitenoise.mat'],  ...
         'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
 end
 
@@ -217,7 +225,7 @@ if plot_bars == 1
     ElecsperSub_Both   = sum(~isnan(dataMat(:,:,1)) & ~isnan(dataMat(:,:,2)));
     
     % save data
-    save([data_dir,filesep,'ElecsPerSub_',band2analyze],'ElecsperSub_Speech','ElecsperSub_Music','ElecsperSub_Both')
+    %save([data_dir,filesep,'ElecsPerSub_',band2analyze],'ElecsperSub_Speech','ElecsperSub_Music','ElecsperSub_Both')
     
     % create bar plot
     colors = [0.7176 0.2745 1.0000; ...
@@ -251,7 +259,7 @@ if plot_bars == 1
     bh1 = bar(sum(ElecsPerSub),'FaceColor','flat');
     bh1.CData = colors;
     bh1.EdgeColor = [1 1 1];
-    ylim([0 250]);
+    %ylim([0 250]);
     xticklabels({'Music','Speech','Both'});
     xtickangle(45);
     ylabel('Electrode count');
@@ -260,6 +268,6 @@ if plot_bars == 1
     box off
     
     % save number of electrodes per subject as a table
-    ElecsPersSub = array2table(ElecsPerSub,'RowNames',sub2plot,'VariableNames',{'Music','Speech','Both'});
-    writetable(ElecsPersSub,[data_dir,filesep,'ElecsPerSub_',band2analyze,'.xlsx'])
+%     ElecsPersSub = array2table(ElecsPerSub,'RowNames',sub2plot,'VariableNames',{'Music','Speech','Both'});
+%     writetable(ElecsPersSub,[data_dir,filesep,'ElecsPerSub_',band2analyze,'.xlsx'])
 end
