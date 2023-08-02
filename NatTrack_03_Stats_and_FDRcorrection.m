@@ -9,60 +9,55 @@
 
 clear, clc,
 
-% create a directory to save data
+% set paths
 iEEG_dir = 'F:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
-% SFB (1-8 Hz) or HFB (70-120 Hz)
-band2analyze  = 'SFB';
-white_n       = 1;
-% use sliding window data (1 = yes, 0 = no)
-segestimation = 0;
-% plot histogram of FDR-corrected p values (1 = yes, 0 = no)
-plot_FDR      = 0;
-% plot number of electrodes per condition (1 = yes, 0 = no)
-plot_bars     = 1;
+band2analyze  = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz)
+white_n       = 1;          % use whitenoise permutations 1 yes, 0 no (uses trialshuffling)
+segestimation = 0;          % use sliding window data (1 = yes, 0 = no) PROBABLY NEEDS TO BE DELETED)
+plot_FDR      = 0;          % plot histograms of FDR-corrected p values (1 = yes, 0 = no)
+plot_bars     = 1;          % bar plot for number of electrodes per condition that survive statistics (1 = yes, 0 = no)
+alpha         = 0.0001;     % p value       
+FDRcorrect    = 1;          % do FDR correction (1 = yes, 0 = no) 
 
 % load data
 if segestimation == 1
+    % observed and permuted data obtained using windowing
     load([data_dir,filesep,'xcorr_',band2analyze,'_windowed.mat'])
     load([data_dir,filesep,'xcorr_',band2analyze,'_windowed_PERM.mat'])
 else
+    % observed and permuted data obtained using full 30 second window
     load([data_dir,filesep,'xcorr_',band2analyze,'.mat'])
     load([data_dir,filesep,'xcorr_',band2analyze,'_whitenoise_PERM.mat'])
 end
 
-alpha       = 0.0001;  % p value       
-FDRcorrect  = 1;     % do FDR correction?   
-n_trials    = size(r_speech{1},2);
-n_conds     = 2;
-
-% this is to merge High Density data to their corresponding participants
+% Data cleaning: this is to merge High Density Grids (which were preprocessed separately) 
+% to ecog data of their corresponding participants
 for sub_i=1:length(sub2plot)
     if contains(sub2plot{sub_i},'HD')
-        r_music{sub_i-1}       = [r_music{sub_i-1}; r_music{sub_i}];
+        r_music{sub_i-1}       = [r_music{sub_i-1}; r_music{sub_i}]; 
         r_music_perm{sub_i-1}  = [r_music_perm{sub_i-1}; r_music_perm{sub_i}];
         lag_music{sub_i-1}     = [lag_music{sub_i-1}; lag_music{sub_i}];
         r_speech{sub_i-1}      = [r_speech{sub_i-1}; r_speech{sub_i}];
         r_speech_perm{sub_i-1} = [r_speech_perm{sub_i-1}; r_speech_perm{sub_i}];
         lag_speech{sub_i-1}    = [lag_speech{sub_i-1}; lag_speech{sub_i}];
-        
         AllChannelLabels{sub_i-1} = [AllChannelLabels{sub_i-1};  AllChannelLabels{sub_i}];
     end
 end
-% now delete redundant data
-r_music(contains(sub2plot,'HD'))        = [];
-r_music_perm(contains(sub2plot,'HD'))   = [];
-lag_music(contains(sub2plot,'HD'))      = [];
-r_speech(contains(sub2plot,'HD'))       = [];
-r_speech_perm(contains(sub2plot,'HD'))  = [];
-lag_speech(contains(sub2plot,'HD'))     = [];
-AllChannelLabels(contains(sub2plot,'HD')) = [];
-sub2plot(contains(sub2plot,'HD'))       = [];
+% more cleaning
+r_music(contains(sub2plot,'HD'))          = [];   r_music_perm(contains(sub2plot,'HD'))   = [];
+lag_music(contains(sub2plot,'HD'))        = [];   r_speech(contains(sub2plot,'HD'))       = [];
+r_speech_perm(contains(sub2plot,'HD'))    = [];   lag_speech(contains(sub2plot,'HD'))     = [];
+AllChannelLabels(contains(sub2plot,'HD')) = [];   sub2plot(contains(sub2plot,'HD'))       = [];
 
-% initialize some data containers we will need for later
+% initialize arrays 
 [pvals_speech, pvals_music, lags_speech, lags_music, fdr_speech, fdr_music] = deal(cell(1,length(sub2plot)));
-n_subs  = size(sub2plot,2);
+
+% get a couple of variables we need for our loops
+n_subs    = size(sub2plot,2);
+n_trials  = size(r_speech{1},2);
+n_conds   = 2;
 
 % loop through subjects and electrodes to get corresponding p values
 for sub_i=1:n_subs
@@ -86,11 +81,11 @@ for sub_i=1:n_subs
             % for analysis conducted in the entire signal
             else
                 % speech
-                null_dist   = mean(squeeze(r_speech_perm{sub_i}(elec_i,:,:)),2);
+                null_dist   = mean(squeeze(r_speech_perm{sub_i}(elec_i,:,:)),1);
                 observed_r  = mean(r_speech{sub_i}(elec_i,:,:),2);
                 pvals_speech{sub_i}(elec_i,:) = sum(null_dist >= observed_r) / n_perms;
                 % music
-                null_dist   = squeeze(mean(r_music_perm{sub_i}(elec_i,:,:),2));
+                null_dist   = mean(squeeze(r_music_perm{sub_i}(elec_i,:,:)),1);
                 observed_r  = mean(r_music{sub_i}(elec_i,:,:),2);
                 pvals_music{sub_i}(elec_i,:)  = sum(null_dist >= observed_r) / n_perms;
             end
@@ -131,27 +126,27 @@ for sub_i=1:n_subs
     lags_speech{sub_i} = mean(mean(lag_speech{sub_i},3),2);
     lags_music{sub_i}  = mean(mean(lag_music{sub_i},3),2);
 end
-figure(1)
-suptitle('speech - no correction')
-figure(2)
-suptitle('music - no correction')
-figure(3)
-suptitle('speech - corrected')
-figure(4)
-suptitle('music - corrected')
-for sub_i=1:n_subs
-    % find number of electrodes per subject
-    matlength(sub_i) = numel(fdr_speech{sub_i});    
+
+% keep things clear
+if plot_FDR == 1
+    figure(1); suptitle('speech - no correction');
+    figure(2); suptitle('music - no correction');
+    figure(3); suptitle('speech - corrected');
+    figure(4); suptitle('music - corrected');
 end
 
-TotalElecs = sum(matlength); % total electrodes
-maxnelecs  = max(matlength); % max number of electrodes across subjects
+% get some important info
+elecspersubject = NaN(1,n_subs);
+for sub_i=1:n_subs
+    elecspersubject(sub_i) = numel(fdr_speech{sub_i});  % number of electrodes per subject
+end
+TotalElecs = sum(elecspersubject); % total electrodes
+maxnelecs  = max(elecspersubject); % max number of electrodes across all subjects
 
-% now create a numeric array for all p values and another one for all lags 
+% create a numeric array for all p values and another one for all lags 
 PValMat    = NaN(maxnelecs,n_subs,n_conds); 
 LagMat     = NaN(maxnelecs,n_subs,n_conds);
 
-% store data for all subjects 
 for sub_i=1:n_subs
     clear tmpSpeech tmpMusic
     tmpSpeech = fdr_speech{sub_i};
@@ -163,30 +158,32 @@ for sub_i=1:n_subs
     LagMat(1:length(tmpSpeech),sub_i,2)  = lags_music{sub_i};    
 end
  
-% now, we look for the correlation coefficients where p < alpha and store them
+% now filter rhos to keep only those whose p is significant
+r_data = cell(n_subs,n_conds);
 for sub_i=1:n_subs
+    % subject-specific data
     r_data_speech = NaN(maxnelecs,n_trials);
     r_data_music  = NaN(maxnelecs,n_trials);   
     for trial_i=1:n_trials
         n_elecs = size(r_speech{sub_i},1);
-        for p_i=1:n_elecs
-%             disp(['Calculating ?Coh for electrode ' num2str(p_i) ' for subject ' num2str(sub_i)]);
-            if fdr_speech{sub_i}(p_i) < alpha
-                r_data_speech(p_i,trial_i) = mean(r_speech{sub_i}(p_i,trial_i,:),3);
+        % whatever is not significant becomes NaN
+        for pval_i=1:n_elecs
+            if fdr_speech{sub_i}(pval_i) < alpha
+                r_data_speech(pval_i,trial_i) = mean(r_speech{sub_i}(pval_i,trial_i,:),3);
             end
-            if fdr_music{sub_i}(p_i) < alpha
-                r_data_music(p_i,trial_i) = mean(r_music{sub_i}(p_i,trial_i,:),3);
+            if fdr_music{sub_i}(pval_i) < alpha
+                r_data_music(pval_i,trial_i) = mean(r_music{sub_i}(pval_i,trial_i,:),3);
             end
         end
     end    
-    % and now we get the mean correlation coefficient across trials
+    % get the mean rho coefficient across trials
     r_data{sub_i,1} = nanmean(r_data_speech,2);
     r_data{sub_i,2} = nanmean(r_data_music,2);
 end
 
-% finally, let's create an array to store all statistically significant
-% correlation values (:,:,1) and lag values (:,:,2) for all subjects (dim
-% 2) and for each subjects electrodes (dim 1)
+% For simplicity, turn all the data above (pvalues, rho values and lag values)
+% into arrays where dim 1 = electrodes, dim 2 = subjects and dim 3 = conditions).
+% For conditions, (:,:,1) = Speech and (:,:,2) = music
 dataMat   = NaN(maxnelecs,n_subs,n_conds);
 
 for sub_i=1:size(r_data,1)
