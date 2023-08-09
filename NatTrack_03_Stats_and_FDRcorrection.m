@@ -18,8 +18,8 @@ white_n       = 1;          % use whitenoise permutations 1 yes, 0 no (uses tria
 segestimation = 0;          % use sliding window data (1 = yes, 0 = no) PROBABLY NEEDS TO BE DELETED)
 plot_FDR      = 0;          % plot histograms of FDR-corrected p values (1 = yes, 0 = no)
 plot_bars     = 1;          % bar plot for number of electrodes per condition that survive statistics (1 = yes, 0 = no)
-alpha         = 0.0001;     % p value       
-FDRcorrect    = 1;          % do FDR correction (1 = yes, 0 = no) 
+alpha         = 0.001;      % p value       
+FDRcorrect    = 0;          % do FDR correction (1 = yes, 0 = no) 
 
 % load data
 if segestimation == 1
