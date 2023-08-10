@@ -1,11 +1,12 @@
-% NaturalisticTracking_ECOG project
+% --------------- NaturalisticTracking_ECOG project -----------------------
 %
-% This code estimates the critical correlation coefficient value corresponding  
-% to a = 0.05 and performs FDR correction for observed p values for each
-% subject. It also plots the total number of electrodes that survive
-% statistics and saves a table with this same info at the subject level.
-
+% This code estimates the critical value corresponding to a predetermined 
+% alpha and optionally performs FDR correction. If specified, it also plots 
+% the total number of electrodes that survive statistics and saves subject-level 
+% values.
+%
 % S.Osorio - 2023
+% -------------------------------------------------------------------------
 
 clear, clc,
 
@@ -13,20 +14,28 @@ clear, clc,
 iEEG_dir = 'F:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
-band2analyze  = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz)
-white_n       = 1;          % use whitenoise permutations 1 yes, 0 no (uses trialshuffling)
+band2analyze  = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz)
+perm_type     = 'ts';       % 'wn' = whitenoise, 'ts' trial shuffling
 segestimation = 0;          % use sliding window data (1 = yes, 0 = no) PROBABLY NEEDS TO BE DELETED)
 plot_FDR      = 0;          % plot histograms of FDR-corrected p values (1 = yes, 0 = no)
-plot_bars     = 1;          % bar plot for number of electrodes per condition that survive statistics (1 = yes, 0 = no)
-alpha         = 0.001;      % p value       
+plot_bars     = 1;          % bar plot (1 = yes, 0 = no)
 FDRcorrect    = 0;          % do FDR correction (1 = yes, 0 = no) 
+if strcmpi(perm_type,'wn')  % p value
+    alpha = 0.001;
+else
+    alpha = 0.05;      
+end
 
 % load data
 if segestimation == 1
     % observed and permuted data obtained using windowing
     load([data_dir,filesep,'xcorr_',band2analyze,'_windowed.mat'])
     load([data_dir,filesep,'xcorr_',band2analyze,'_windowed_PERM.mat'])
-else
+elseif strcmpi(perm_type,'ts')
+    % observed and permuted data obtained using full 30 second window
+    load([data_dir,filesep,'xcorr_',band2analyze,'.mat'])
+    load([data_dir,filesep,'xcorr_',band2analyze,'_trialshuffle_PERM.mat'])    
+elseif strcmpi(perm_type,'wn')
     % observed and permuted data obtained using full 30 second window
     load([data_dir,filesep,'xcorr_',band2analyze,'.mat'])
     load([data_dir,filesep,'xcorr_',band2analyze,'_whitenoise_PERM.mat'])
@@ -209,7 +218,10 @@ disp(['MUSIC: Statistically significant data in ' num2str(subeffect) ' out of ' 
 if segestimation == 1
     save([data_dir,filesep,'CROSdata_' band2analyze '_windowed.mat'],  ... 
     'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
-else
+elseif strcmpi(perm_type,'ts')
+    save([data_dir,filesep,'CROSdata_' band2analyze '_trialshuffle.mat'],  ...
+        'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
+elseif strcmpi(perm_type,'wn')
     save([data_dir,filesep,'CROSdata_' band2analyze '_whitenoise.mat'],  ...
         'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
 end

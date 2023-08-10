@@ -22,7 +22,9 @@ perm_type         = 'wn';
 % load data to plot
 if segestimation == 1
     load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_windowed.mat']);
-else
+elseif strcmpi(perm_type,'ts')
+    load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_trialshuffle.mat']);
+elseif strcmpi(perm_type,'wn')
     load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_whitenoise.mat']);
 end   
 

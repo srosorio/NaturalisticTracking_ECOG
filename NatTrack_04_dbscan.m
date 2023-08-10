@@ -21,7 +21,7 @@ dbscan_param      = 1;  % plot dbscan optimization process
 plot_clusters     = 1;  % only after dbscan optimization
 condition2analyze = 'music';
 band2analyze      = 'HFB';
-perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
+perm_type         = 'ts';   % wn = whitenoise, ts = trialshuffling
 
 % these are the parameters after optimization per condition and freq band
 if strcmpi(perm_type,'ts') 
@@ -59,7 +59,9 @@ colors  = [0.7176 0.2745 1.0000; ...
 % load data to plot
 if segestimation == 1
     load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_windowed.mat']);
-else
+elseif strcmpi(perm_type,'ts')
+    load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_trialshuffle.mat']);
+elseif strcmpi(perm_type,'wn')
     load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_whitenoise.mat']);
 end    
 
