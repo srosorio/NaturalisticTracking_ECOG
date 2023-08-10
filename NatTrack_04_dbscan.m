@@ -17,43 +17,39 @@ clear, clc, close
 % -------------------------------------------------------------------------
 segestimation     = 0;  % wether to use segmented data
 plot_neteffect    = 0;  % plot effect prior to statistics
-dbscan_param      = 0;  % plot dbscan optimization process
+dbscan_param      = 1;  % plot dbscan optimization process
 plot_clusters     = 1;  % only after dbscan optimization
-condition2analyze = 'speech';
+condition2analyze = 'music';
 band2analyze      = 'HFB';
 perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
 
 % these are the parameters after optimization per condition and freq band
 if strcmpi(perm_type,'ts') 
     % if using trial shuffling permutations
-    if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.014; minpoints = 14;
+    if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+        mindist = 0.006; minpoints = 14;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
         mindist = 0.01; minpoints = 16;
-    elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
-        mindist = 0.024; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 16;
-    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.006; minpoints = 18;
+        mindist = 0.016; minpoints = 14;
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
+        mindist = 0.014; minpoints = 14;        
     end
 else
     %if using whitenoise permutations
-    if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.014; minpoints = 14;
+    if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+        mindist = 0.006; minpoints = 18;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-        mindist = 0.006; minpoints = 16;
-    elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
-        mindist = 0.016; minpoints = 12;
-    elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'SFB')
-        mindist = 0.01; minpoints = 12;
+        mindist = 0.006; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
         mindist = 0.012; minpoints = 12;
-    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.004; minpoints = 12;
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
+        mindist = 0.016; minpoints = 14;
     end
 end
+
 % ------------------- nothing to change from here on ----------------------
+% mindist = 0.004; minpoints = 12;
 
 % colors per condition (1,:) music, (2,:) speech, (3,:) music and speech
 colors  = [0.7176 0.2745 1.0000; ...
@@ -219,20 +215,29 @@ if plot_clusters == 1
     % to cluster below the minimum number of electrodes set for the cluster
     % analysis
     if any(tmptable(:,2) < minpoints)
-        deleteThis = tmptable(find(tmptable(:,2) < minpoints),1);
+        deleteThis = tmptable(tmptable(:,2) < minpoints,1);
     end
-    datamat(ismember(Clusters,[-1; deleteThis]),:,:)   = [];
+    
+    % delete clusters where n_electrodes < minpoints
+    datamat(ismember(Clusters,[-1; deleteThis]),:,:)  = [];
     Clusters(ismember(Clusters,[-1; deleteThis])) = [];
     
-    % cortical surface
+    % and combine smaller surviving clusters (where n_electrodes > minpoints) into one
+    if size(tmptable,1)-1 > 3
+        Clusters(ismember(Clusters,tmptable(4:end,1))) = 3;
+    end
+    
+    % plot cortical surface
     try
         [hFig, iDS, iFig] = view_surface(SurfaceFile);
     catch
         [hFig, iDS, iFig] = view_surface(SurfaceFile);
     end
+    % set background color
     hFig.Color = [1 1 1];
     hold on;
-    % plot electrodes
+    
+    % plot statistically-significant electrodes
     clustersID = unique(Clusters);    
     for cluster_i = 1:length(clustersID)
         ThisCluster = datamat(Clusters == clustersID(cluster_i),:);
@@ -241,7 +246,7 @@ if plot_clusters == 1
         sh.MarkerFaceAlpha = .8;
         sh.SizeData = 100;
     end
-    % print parameters used 
+    % print parameters used as title
     title(['mindist = ' num2str(mindist) ', minelecs = ' num2str(minpoints)],'FontWeight','normal','FontSize',22);
     
     h = zeros(1, 1);
@@ -249,6 +254,7 @@ if plot_clusters == 1
     h(2) = plot(NaN,NaN,'color',colors(2,:));
     h(3) = plot(NaN,NaN,'color',colors(3,:));
     
+    % add legends
     if length(clustersID) == 1
         [lh,icons] = legend(h, 'cluster 1','box','off','FontSize',24);
         icons(2).LineWidth = 5;
