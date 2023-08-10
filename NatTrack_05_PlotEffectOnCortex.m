@@ -10,13 +10,14 @@
 % cd('E:\Matlab\brainstorm3');
 % brainstorm
 %%
-clear, clc, close
-condition2analyze = 'music'; % 'speech' or 'music'
-band2analyze      = 'HFB';   % SFB (1-8 Hz) or HFB (70-120 Hz) 
-segestimation     = 0;       % whether to use windowed data
-plot_oncortex     = 1;       % whether to plot effect on cortical surface
-plot_histogram    = 1;       % whether to plot histogram of plotted values
-effect2plot       = 'rho';   % rho (corrcoefficients) or lag (xcorr lags)
+clear, clc, close all
+condition2analyze = 'music';   % 'speech' or 'music'
+band2analyze      = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
+segestimation     = 0;          % whether to use windowed data
+plot_oncortex     = 1;          % whether to plot effect on cortical surface
+plot_histogram    = 1;          % whether to plot histogram of plotted values
+effect2plot       = 'rho';      % rho (corrcoefficients) or lag (xcorr lags)
+perm_type         = 'wn';
 
 % load data to plot
 if segestimation == 1
@@ -25,21 +26,32 @@ else
     load(['F:\Matlab\IEEG\Data\CROSdata_',band2analyze,'_whitenoise.mat']);
 end   
 
-% set clustering parameters according to condition and frequency band of
-% interest. These values were estimated in NatTrack_dbscan. Make sure they
-% match the optimal parameters found in that script. 
-% if strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-%         mindist = 0.018; minpoints = 14;
-% elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-%         mindist = 0.010; minpoints = 16;
-% elseif strcmpi(condition2analyze,'both') && strcmpi(band2analyze,'HFB')
-%         mindist = 0.024; minpoints = 12;
-% elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-%         mindist = 0.016; minpoints = 16;
-% elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-%         mindist = 0.012; minpoints = 12;
-% end
-mindist = 0.016; minpoints = 12;
+% these are the parameters after optimization per condition and freq band
+% these are the parameters after optimization per condition and freq band
+if strcmpi(perm_type,'ts') 
+    % if using trial shuffling permutations
+    if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+        mindist = 0.006; minpoints = 14;
+    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
+        mindist = 0.01; minpoints = 16;
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
+        mindist = 0.016; minpoints = 14;
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
+        mindist = 0.014; minpoints = 14;        
+    end
+else
+    %if using whitenoise permutations
+    if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
+        mindist = 0.006; minpoints = 18;
+    elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
+        mindist = 0.006; minpoints = 12;
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
+        mindist = 0.012; minpoints = 12;
+    elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
+        mindist = 0.016; minpoints = 14;
+    end
+end
+
 % locate data in separate variables and plot
 if strcmpi(effect2plot,'rho')
     effect4speech = dataMat(:,:,1);
@@ -88,16 +100,22 @@ testClusters = dbscan(testMat,mindist,minpoints);
 tmptable     = tabulate(testClusters)
 deleteThis   = 0;
 
+% identify clusters where number of elecs < minpoints
 if any(tmptable(:,2) < minpoints)
-    deleteThis = tmptable(find(tmptable(:,2) < minpoints),1);
+    deleteThis = tmptable(tmptable(:,2) < minpoints,1);
+end
+% group smaller surviving clusters into one single cluster
+if size(tmptable,1)-1 > 3
+    testClusters(ismember(testClusters,tmptable(4:end,1))) = 3;
 end
 
 % get rid of non-clustered electrodes
-ValRange(testClusters == -1 | testClusters == deleteThis)     = [];
-testMat(testClusters == -1 | testClusters == deleteThis,:,:)  = [];
-subIDelec(testClusters == -1 | testClusters == deleteThis,:)  = [];
-testClusters(testClusters == -1 | testClusters == deleteThis) = []; 
-% plot effect on cortex
+ValRange(ismember(testClusters,[-1; deleteThis]))     = [];
+testMat(ismember(testClusters,[-1; deleteThis]),:,:)  = [];
+subIDelec(ismember(testClusters,[-1; deleteThis]),:)  = [];
+testClusters(ismember(testClusters,[-1; deleteThis])) = []; 
+
+% plot statistical effect on cortex
 if plot_oncortex == 1
     [hFig, iDS, iFig] = view_surface(SurfaceFile);
     hFig.Color = [1 1 1];
@@ -110,7 +128,7 @@ if plot_oncortex == 1
     ch = colorbar;
     if strcmpi(effect2plot,'rho')
         ch.Label.String = 'Rho';
-        caxis([0.05 .10]);  % caxis values will likely need to be adjusted manually
+        %caxis([0.05 .10]);  % caxis values will likely need to be adjusted manually
     else
         ch.Label.String = 'Lag (ms)';
         caxis([-250 250]);
