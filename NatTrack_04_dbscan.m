@@ -20,20 +20,20 @@ plot_neteffect    = 0;  % plot effect prior to statistics
 dbscan_param      = 1;  % plot dbscan optimization process
 plot_clusters     = 1;  % only after dbscan optimization
 condition2analyze = 'music';
-band2analyze      = 'HFB';
+band2analyze      = 'SFB';
 perm_type         = 'ts';   % wn = whitenoise, ts = trialshuffling
 
 % these are the parameters after optimization per condition and freq band
 if strcmpi(perm_type,'ts') 
     % if using trial shuffling permutations
     if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.006; minpoints = 14;
+        mindist = 0.012; minpoints = 12;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-        mindist = 0.01; minpoints = 16;
+        mindist = 0.008; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 14;
+        mindist = 0.016; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.014; minpoints = 14;        
+        mindist = 0.018; minpoints = 12;        
     end
 else
     %if using whitenoise permutations
