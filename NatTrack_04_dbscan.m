@@ -17,11 +17,16 @@ clear, clc, close
 % -------------------------------------------------------------------------
 segestimation     = 0;  % wether to use segmented data
 plot_neteffect    = 0;  % plot effect prior to statistics
-dbscan_param      = 1;  % plot dbscan optimization process
-plot_clusters     = 1;  % only after dbscan optimization
+dbscan_param      = 0;  % plot dbscan optimization process
+plot_clusters     = 0;  % only after dbscan optimization
 condition2analyze = 'music';
-band2analyze      = 'SFB';
-perm_type         = 'ts';   % wn = whitenoise, ts = trialshuffling
+band2analyze      = 'HFB';
+perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
+% -------------------------------------------------------------------------
+
+% set paths
+iEEG_dir = 'F:\Matlab\IEEG';
+data_dir = [iEEG_dir,filesep,'Data'];
 
 % these are the parameters after optimization per condition and freq band
 if strcmpi(perm_type,'ts') 
@@ -123,6 +128,19 @@ elseif strcmpi(condition2analyze,'both')
         end
     end  
 end
+
+% get mean rho vals at the subject level
+if strcmpi(condition2analyze,'music')
+    for i=1:n_subs
+        meanRho(i) = mean(rhos4music(subIDelec(subIDelec(:,1) == i,2),i));
+    end
+else 
+    for i=1:n_subs
+        meanRho(i) = mean(rhos4speech(subIDelec(subIDelec(:,1) == i,2),i));
+    end
+end
+
+save([data_dir,filesep,'meanRho_clustered_',band2analyze,'_',condition2analyze,'.mat'],'meanRho');
 
 % plot all electrodes (Net effect, without cluster analysis)
 if plot_neteffect == 1
