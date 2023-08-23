@@ -17,9 +17,9 @@ clear, clc, close
 % -------------------------------------------------------------------------
 segestimation     = 0;  % wether to use segmented data
 plot_neteffect    = 0;  % plot effect prior to statistics
-dbscan_param      = 0;  % plot dbscan optimization process
-plot_clusters     = 0;  % only after dbscan optimization
-condition2analyze = 'music';
+dbscan_param      = 1;  % plot dbscan optimization process
+plot_clusters     = 1;  % only after dbscan optimization
+condition2analyze = 'speech';
 band2analyze      = 'HFB';
 perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
 % -------------------------------------------------------------------------
@@ -34,22 +34,22 @@ if strcmpi(perm_type,'ts')
     if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
         mindist = 0.012; minpoints = 12;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-        mindist = 0.008; minpoints = 12;
+        mindist = 0.01; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 12;
+        mindist = 0.016; minpoints = 14;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.018; minpoints = 12;        
+        mindist = 0.026; minpoints = 12;        
     end
 else
     %if using whitenoise permutations
     if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.006; minpoints = 18;
+        mindist = 0.006; minpoints = 16;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
         mindist = 0.006; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
         mindist = 0.012; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.016; minpoints = 14;
+        mindist = 0.014; minpoints = 12;
     end
 end
 
@@ -129,19 +129,6 @@ elseif strcmpi(condition2analyze,'both')
     end  
 end
 
-% get mean rho vals at the subject level
-if strcmpi(condition2analyze,'music')
-    for i=1:n_subs
-        meanRho(i) = mean(rhos4music(subIDelec(subIDelec(:,1) == i,2),i));
-    end
-else 
-    for i=1:n_subs
-        meanRho(i) = mean(rhos4speech(subIDelec(subIDelec(:,1) == i,2),i));
-    end
-end
-
-save([data_dir,filesep,'meanRho_clustered_',band2analyze,'_',condition2analyze,'.mat'],'meanRho');
-
 % plot all electrodes (Net effect, without cluster analysis)
 if plot_neteffect == 1
     % bst will throw an error every time the cortical surface is ploted for
@@ -196,8 +183,9 @@ if dbscan_param == 1
         end
     end
     
-    opt_idx = prctelecs ./ (dsts) - (prctelecs ./ points');
+    opt_idx = prctelecs ./ (dsts*1000) .* points' .* numclusters;
     max_val = max(max(opt_idx));
+    
     % plot data
     figure(3), clf
     plot(dsts,opt_idx / max_val,'LineWidth',1.5)

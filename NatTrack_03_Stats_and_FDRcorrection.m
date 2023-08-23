@@ -14,8 +14,8 @@ clear, clc,
 iEEG_dir = 'F:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
-band2analyze  = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz)
-perm_type     = 'ts';       % 'wn' = whitenoise, 'ts' trial shuffling
+band2analyze  = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz)
+perm_type     = 'wn';       % 'wn' = whitenoise, 'ts' trial shuffling
 segestimation = 0;          % use sliding window data (1 = yes, 0 = no) PROBABLY NEEDS TO BE DELETED)
 plot_FDR      = 0;          % plot histograms of FDR-corrected p values (1 = yes, 0 = no)
 plot_bars     = 1;          % bar plot (1 = yes, 0 = no)

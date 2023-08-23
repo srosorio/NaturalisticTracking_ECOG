@@ -11,13 +11,17 @@
 % brainstorm
 %%
 clear, clc, close all
-condition2analyze = 'music';   % 'speech' or 'music'
-band2analyze      = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
+condition2analyze = 'speech';   % 'speech' or 'music'
+band2analyze      = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;          % whether to use windowed data
 plot_oncortex     = 1;          % whether to plot effect on cortical surface
 plot_histogram    = 1;          % whether to plot histogram of plotted values
-effect2plot       = 'rho';      % rho (corrcoefficients) or lag (xcorr lags)
+effect2plot       = 'lag';      % rho (corrcoefficients) or lag (xcorr lags)
 perm_type         = 'wn';
+
+% set paths
+iEEG_dir = 'F:\Matlab\IEEG';
+data_dir = [iEEG_dir,filesep,'Data'];
 
 % load data to plot
 if segestimation == 1
@@ -29,27 +33,28 @@ elseif strcmpi(perm_type,'wn')
 end   
 
 % these are the parameters after optimization per condition and freq band
+% these are the parameters after optimization per condition and freq band
 if strcmpi(perm_type,'ts') 
     % if using trial shuffling permutations
     if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
         mindist = 0.012; minpoints = 12;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
-        mindist = 0.008; minpoints = 12;
+        mindist = 0.01; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 12;
+        mindist = 0.016; minpoints = 14;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.018; minpoints = 12;        
+        mindist = 0.026; minpoints = 12;        
     end
 else
     %if using whitenoise permutations
     if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.006; minpoints = 18;
+        mindist = 0.006; minpoints = 16;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
         mindist = 0.006; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
         mindist = 0.012; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.016; minpoints = 14;
+        mindist = 0.014; minpoints = 12;
     end
 end
 
@@ -98,13 +103,14 @@ end
 
 % now get only the desired electrodes that belong to the specified cluster
 testClusters = dbscan(testMat,mindist,minpoints);
-tmptable     = tabulate(testClusters)
+tmptable = sortrows(tabulate(testClusters),-3)
 deleteThis   = 0;
 
 % identify clusters where number of elecs < minpoints
 if any(tmptable(:,2) < minpoints)
     deleteThis = tmptable(tmptable(:,2) < minpoints,1);
 end
+
 % group smaller surviving clusters into one single cluster
 if size(tmptable,1)-1 > 3
     testClusters(ismember(testClusters,tmptable(4:end,1))) = 3;
@@ -115,6 +121,24 @@ ValRange(ismember(testClusters,[-1; deleteThis]))     = [];
 testMat(ismember(testClusters,[-1; deleteThis]),:,:)  = [];
 subIDelec(ismember(testClusters,[-1; deleteThis]),:)  = [];
 testClusters(ismember(testClusters,[-1; deleteThis])) = []; 
+
+% get mean rho vals at the subject level
+if strcmpi(condition2analyze,'music')
+    for i=1:30
+        meanRho(i)  = mean(dataMat(subIDelec(subIDelec(:,1) == i,2),i,2));
+        meanPval(i) = mean(PValMat(subIDelec(subIDelec(:,1) == i,2),i,2));
+        meanLag(i)  = mean(LagMat(subIDelec(subIDelec(:,1) == i,2),i,2));
+    end
+else 
+    for i=1:30
+        meanRho(i)  = mean(dataMat(subIDelec(subIDelec(:,1) == i,2),i,1));
+        meanPval(i) = mean(PValMat(subIDelec(subIDelec(:,1) == i,2),i,1));
+        meanLag(i)  = mean(LagMat(subIDelec(subIDelec(:,1) == i,2),i,1));        
+    end
+end
+
+% save data
+save([data_dir,filesep,'stats_clustered_',band2analyze,'_',condition2analyze,'.mat'],'meanRho','meanPval','meanLag');
 
 % plot statistical effect on cortex
 if plot_oncortex == 1
