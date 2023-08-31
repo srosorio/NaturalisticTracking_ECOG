@@ -1,15 +1,15 @@
 clear, clc
 
-cd('E:\Matlab\IEEG\Scripts');
+cd('F:\Matlab\IEEG\Scripts');
 % add NSL toolbox to path
-addpath('E:\Matlab\IEEG\Scripts\NSL');
+addpath('F:\Matlab\IEEG\Scripts\NSL');
 
 % create a directory to save data
-iEEG_dir = 'E:\Matlab\IEEG';
+iEEG_dir = 'F:\Matlab\IEEG';
 data_dir = [iEEG_dir,filesep,'Data'];
 
 % load audio file
-[y,fs] = audioread('E:\Matlab\IEEG\Stimulus\audio.wav');
+[y,fs] = audioread('F:\Matlab\IEEG\Stimulus\audio.wav');
 dt     = 1/fs;                   
 tfull  = 0:dt:(length(y)*dt)-dt;  % time vector
 
