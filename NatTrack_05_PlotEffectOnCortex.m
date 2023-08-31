@@ -11,12 +11,12 @@
 % brainstorm
 %%
 clear, clc, close all
-condition2analyze = 'music';   % 'speech' or 'music'
+condition2analyze = 'Music';   % 'speech' or 'music'
 band2analyze      = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;          % whether to use windowed data
 plot_oncortex     = 1;          % whether to plot effect on cortical surface
-plot_histogram    = 0;          % whether to plot histogram of plotted values
-effect2plot       = 'rho';      % rho (corrcoefficients) or lag (xcorr lags)
+plot_histogram    = 1;          % whether to plot histogram of plotted values
+effect2plot       = 'lag';      % rho (corrcoefficients) or lag (xcorr lags)
 perm_type         = 'ts';
 
 % set paths
@@ -169,7 +169,7 @@ if plot_histogram == 1
                0.4667 0.6745 0.1882];  
            
     figure,clf
-    hh = histogram(ValRange,10);
+    hh = histogram(ValRange);
     if strcmpi(effect2plot,'rho')
         ylabel('Electrode count'); %ylim([0 30]);
         xlabel('Correlation coefficient'); xlim([0 0.3]);
@@ -197,7 +197,7 @@ end
 pvals = pvals(~isnan(pvals));
 
 if strcmpi(effect2plot,'rho')
-    disp(['Mean rho = ' num2str(mean(ValRange)), ', N = ' num2str(length(ValRange)), ', Mean p = ' num2str(mean(pvals)), ', SD = ' num2str(std(ValRange))]);
+    disp(['n = ' num2str(sum(~isnan(meanRho))), ', r = ' num2str(mean(ValRange),2), ', elecs = ' num2str(length(ValRange)), ', p = ' num2str(mean(pvals),2), ', SD = ' num2str(std(ValRange),2)]);
 else
-    disp(['Mean lag = ' num2str(mean(ValRange)), ', N = ' num2str(length(ValRange)), ', Mean p = ' num2str(mean(pvals)), ', SD = ' num2str(std(ValRange))]);
+    disp(['n = ' num2str(sum(~isnan(meanRho))), ', r = ' num2str(mean(ValRange),2), ', elecs = ' num2str(length(ValRange)), ', p = ' num2str(mean(pvals),2), ', SD = ' num2str(std(ValRange),2)]);
 end
