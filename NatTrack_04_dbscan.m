@@ -20,7 +20,7 @@ plot_neteffect    = 0;  % plot effect prior to statistics
 dbscan_param      = 1;  % plot dbscan optimization process
 plot_clusters     = 1;  % only after dbscan optimization
 condition2analyze = 'speech';
-band2analyze      = 'HFB';
+band2analyze      = 'SFB';
 perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
 % -------------------------------------------------------------------------
 
@@ -32,13 +32,13 @@ data_dir = [iEEG_dir,filesep,'Data'];
 if strcmpi(perm_type,'ts') 
     % if using trial shuffling permutations
     if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.012; minpoints = 12;
+        mindist = 0.016; minpoints = 14;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
         mindist = 0.01; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 14;
+        mindist = 0.02; minpoints = 14;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.026; minpoints = 12;        
+        mindist = 0.018; minpoints = 12;        
     end
 else
     %if using whitenoise permutations
@@ -183,12 +183,13 @@ if dbscan_param == 1
         end
     end
     
-    opt_idx = prctelecs ./ (dsts*1000) .* points' .* numclusters;
+    opt_idx = prctelecs ./ (dsts*1000) .* points' .* numclusters;  
     max_val = max(max(opt_idx));
+    opt_idx = opt_idx / max_val; 
     
     % plot data
     figure(3), clf
-    plot(dsts,opt_idx / max_val,'LineWidth',1.5)
+    plot(dsts,opt_idx,'LineWidth',1.5)
     ylabel('OI_{norm}');
     xlabel('epsilon');
     legend(num2str(points'),'Location','SouthEast'); legend boxoff
@@ -203,16 +204,16 @@ if plot_clusters == 1
     %colors for different clusters within conditions
     if strcmpi(condition2analyze,'music')
         colors = [0.7176 0.2745 1.0000; ...
-            0.4902 0.2706 1.0000; ...
-            0.2706 0.3686 1.0000];
+                  0.4902 0.2706 1.0000; ...
+                  0.2706 0.3686 1.0000];
     elseif strcmpi(condition2analyze,'speech')
         colors = [1.0000 0.4118 0.1608; ...
-            1.0000 0.6784 0.1608; ...
-            0.9412 0.8392 0.3373];
+                  1.0000 0.6784 0.1608; ...
+                  0.9412 0.8392 0.3373];
     elseif strcmpi(condition2analyze,'both')
         colors = [0.4667 0.6745 0.1882; ...
-            0.1882 0.6706 0.5255; ...
-            0.1882 0.5569 0.6706];
+                  0.1882 0.6706 0.5255; ...
+                  0.1882 0.5569 0.6706];
     end
     
     % get clusters

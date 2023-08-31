@@ -11,13 +11,13 @@
 % brainstorm
 %%
 clear, clc, close all
-condition2analyze = 'speech';   % 'speech' or 'music'
+condition2analyze = 'music';   % 'speech' or 'music'
 band2analyze      = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;          % whether to use windowed data
 plot_oncortex     = 1;          % whether to plot effect on cortical surface
-plot_histogram    = 1;          % whether to plot histogram of plotted values
-effect2plot       = 'lag';      % rho (corrcoefficients) or lag (xcorr lags)
-perm_type         = 'wn';
+plot_histogram    = 0;          % whether to plot histogram of plotted values
+effect2plot       = 'rho';      % rho (corrcoefficients) or lag (xcorr lags)
+perm_type         = 'ts';
 
 % set paths
 iEEG_dir = 'F:\Matlab\IEEG';
@@ -33,17 +33,16 @@ elseif strcmpi(perm_type,'wn')
 end   
 
 % these are the parameters after optimization per condition and freq band
-% these are the parameters after optimization per condition and freq band
 if strcmpi(perm_type,'ts') 
     % if using trial shuffling permutations
     if strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'SFB')
-        mindist = 0.012; minpoints = 12;
+        mindist = 0.016; minpoints = 14;
     elseif strcmpi(condition2analyze,'speech') && strcmpi(band2analyze,'HFB')
         mindist = 0.01; minpoints = 12;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'SFB')
-        mindist = 0.016; minpoints = 14;
+        mindist = 0.02; minpoints = 14;
     elseif strcmpi(condition2analyze,'music') && strcmpi(band2analyze,'HFB')
-        mindist = 0.026; minpoints = 12;        
+        mindist = 0.018; minpoints = 12;        
     end
 else
     %if using whitenoise permutations
@@ -170,7 +169,7 @@ if plot_histogram == 1
                0.4667 0.6745 0.1882];  
            
     figure,clf
-    hh = histogram(ValRange,5);
+    hh = histogram(ValRange,10);
     if strcmpi(effect2plot,'rho')
         ylabel('Electrode count'); %ylim([0 30]);
         xlabel('Correlation coefficient'); xlim([0 0.3]);
@@ -190,17 +189,15 @@ if plot_histogram == 1
 end
 
 % print some statistics
-disp(['N = ' num2str(length(ValRange))]);
-if strcmpi(effect2plot,'rho')
-    disp(['Median rho = ' num2str(median(ValRange))]);
-else
-    disp(['Median lag = ' num2str(median(ValRange))]);
-end
-disp(['SD = ' num2str(std(ValRange))]);
 if strcmpi(condition2analyze,'music')
     pvals = PValMat(:,:,2);
 else
     pvals = PValMat(:,:,1);
 end
 pvals = pvals(~isnan(pvals));
-disp(['Mean p = ' num2str(mean(pvals))]);
+
+if strcmpi(effect2plot,'rho')
+    disp(['Mean rho = ' num2str(mean(ValRange)), ', N = ' num2str(length(ValRange)), ', Mean p = ' num2str(mean(pvals)), ', SD = ' num2str(std(ValRange))]);
+else
+    disp(['Mean lag = ' num2str(mean(ValRange)), ', N = ' num2str(length(ValRange)), ', Mean p = ' num2str(mean(pvals)), ', SD = ' num2str(std(ValRange))]);
+end
