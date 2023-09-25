@@ -11,13 +11,13 @@
 % brainstorm
 %%
 clear, clc, close all
-condition2analyze = 'Music';   % 'speech' or 'music'
+condition2analyze = 'Speech';   % 'speech' or 'music'
 band2analyze      = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;          % whether to use windowed data
 plot_oncortex     = 1;          % whether to plot effect on cortical surface
 plot_histogram    = 1;          % whether to plot histogram of plotted values
 effect2plot       = 'lag';      % rho (corrcoefficients) or lag (xcorr lags)
-perm_type         = 'ts';
+perm_type         = 'wn';
 
 % set paths
 iEEG_dir = 'F:\Matlab\IEEG';
