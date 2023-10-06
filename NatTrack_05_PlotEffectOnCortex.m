@@ -7,7 +7,7 @@
 % S.Osorio - 2023
 
 % initialize BST
-% cd('E:\Matlab\brainstorm3');
+% cd('F:\Matlab\brainstorm3');
 % brainstorm
 %%
 clear, clc, close all
