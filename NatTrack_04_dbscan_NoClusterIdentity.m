@@ -19,7 +19,7 @@ segestimation     = 0;  % wether to use segmented data
 plot_neteffect    = 0;  % plot effect prior to statistics
 dbscan_param      = 0;  % plot dbscan optimization process
 plot_clusters     = 1;  % only after dbscan optimization
-condition2analyze = 'both';
+condition2analyze = 'speech';
 band2analyze      = 'SFB';
 perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
 % -------------------------------------------------------------------------
@@ -131,7 +131,8 @@ elseif strcmpi(condition2analyze,'both')
                 counter = counter + 1;
 %             end
         end
-    end  
+    end 
+    save([data_dir,filesep,'dbscan_results_' condition2analyze '_' band2analyze '.mat'],'datamat','ValRange','subIDelec')
 end
 
 % plot all electrodes (Net effect, without cluster analysis)
