@@ -5,14 +5,15 @@
 %
 % S.Osorio - 2023
 
-clear, clc,
+clearvars -except time acoustic_signal brain_signal_HFB brain_signal_SFB
+clc,
 
 % create a directory to save data
 iEEG_dir = 'F:\Matlab\IEEG';
 cd(iEEG_dir)
 data_dir = [iEEG_dir,filesep,'Data'];
 
-band2analyze = 'HFB';  
+band2analyze = 'SFB';  
 sub2plot     = {'sub-02','sub-03','sub-05','sub-06','sub-10','sub-12','sub-16','sub-18', ...
                 'sub-19','sub-20','sub-22','sub-24','sub-25','sub-26','sub-27','sub-34', ...
                 'sub-36','sub-36HD','sub-39','sub-40','sub-45','sub-45HD','sub-46','sub-48', ...
