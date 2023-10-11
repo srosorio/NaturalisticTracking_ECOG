@@ -75,8 +75,8 @@ psd_music = psd_music ./ sum(psd_music);
 % plot
 figure(1), clf
 h1 = plot(frex_music,psd_music(:,1:6),'linew',1);
-xlim([0 8]);
-ylim([0 .3]);
+xlim([0 8]); 
+ylim([0 .3]); yticks(0.1:0.1:0.3)
 xlabel('Frequency (Hz)'); ylabel('Normalized power');
 title('Music','FontWeight','normal');
 set(gca,'FontSize',12);
@@ -98,8 +98,8 @@ psd_speech = psd_speech ./ sum(psd_speech);
 % plot
 figure(2), clf
 h1 = plot(frex_speech,psd_speech,'linew',1);
-xlim([0 12]); 
-ylim([0 .3]);
+xlim([0 8]); 
+ylim([0 .3]); yticks(0.1:0.1:0.3)
 xlabel('Frequency (Hz)'); ylabel('Normalized power');
 title('Speech','FontWeight','normal');
 set(gca,'FontSize',12);
