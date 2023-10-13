@@ -10,9 +10,9 @@
 % cd('F:\Matlab\brainstorm3');
 % brainstorm
 %%
-clear, clc, close all
-condition2analyze = 'Speech';   % 'speech' or 'music'
-band2analyze      = 'SFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
+clear, clc
+condition2analyze = 'speech';   % 'speech' or 'music'
+band2analyze      = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;          % whether to use windowed data
 plot_oncortex     = 1;          % whether to plot effect on cortical surface
 plot_histogram    = 1;          % whether to plot histogram of plotted values
@@ -146,19 +146,13 @@ if plot_oncortex == 1
     hold on;
     
     sh  = scatter3(testMat(:,1),testMat(:,2),testMat(:,3),60,ValRange,'filled');
-    sh.MarkerFaceAlpha = .85;
-    sh.SizeData = 100;
-
+%     sh.MarkerEdgeColor = [1 1 1];
+%     sh.MarkerEdgeAlpha = .5;
+    sh.MarkerFaceAlpha = .5;
+    sh.SizeData = 50;
     ch = colorbar;
-    if strcmpi(effect2plot,'rho')
-        ch.Label.String = 'Rho';
-        %caxis([0.05 .10]);  % caxis values will likely need to be adjusted manually
-    else
-        ch.Label.String = 'Lag (ms)';
-        caxis([-250 250]);
-    end
-    ch.FontSize = 20;
-    title([condition2analyze ' - ' band2analyze],'FontWeight','normal','FontSize',22);
+    ch.FontSize = 15;
+
 end
 
 % histogram for ploted values
@@ -169,7 +163,7 @@ if plot_histogram == 1
                0.4667 0.6745 0.1882];  
            
     figure,clf
-    hh = histogram(ValRange);
+    hh = histogram(ValRange,8);
     if strcmpi(effect2plot,'rho')
         ylabel('Electrode count'); %ylim([0 30]);
         xlabel('Correlation coefficient'); xlim([0 0.3]);
@@ -183,17 +177,36 @@ if plot_histogram == 1
         hh.FaceColor = colors(2,:);
     end       
     hh.EdgeColor = [1 1 1];
-    title([condition2analyze ' - ' band2analyze],'FontWeight','Normal');
-    set(gca,'FontSize',20,'FontName','Arial');
+%     title([condition2analyze ' - ' band2analyze],'FontWeight','Normal');
+    set(gca,'FontSize',12,'FontName','Arial');
     box off
 end
 
 % print some statistics
 if strcmpi(condition2analyze,'music')
     pvals = PValMat(:,:,2);
+    if strcmpi(effect2plot,'rho')
+        caxis([0.08 0.10])
+        ch.Ticks = 0.08:0.005:0.10;
+        ch.Label.String = 'Rho';
+    else
+        ch.Label.String = 'Lag (ms)';
+        caxis([-250 250]);
+        ch.Ticks = -200:100:200;
+    end
 else
     pvals = PValMat(:,:,1);
+    if strcmpi(effect2plot,'rho')
+        caxis([0.08 0.12])
+        ch.Ticks = 0.08:0.01:0.12;
+    else
+        ch.Label.String = 'Lag (ms)';
+        caxis([-250 250]);
+        ch.Ticks = -200:100:200;
+    end
 end
+% title([condition2analyze ' - ' band2analyze],'FontWeight','normal','FontSize',22);
+
 pvals = pvals(~isnan(pvals));
 
 if strcmpi(effect2plot,'rho')

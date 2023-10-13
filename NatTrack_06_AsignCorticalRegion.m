@@ -11,7 +11,7 @@
 % brainstorm
 %%
 clear, clc, close all
-condition2analyze = 'Speech';   % 'speech' or 'music'
+condition2analyze = 'Music';   % 'speech' or 'music'
 band2analyze      = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;          % whether to use windowed data
 plot_oncortex     = 1;          % whether to plot effect on cortical surface
@@ -153,7 +153,7 @@ if plot_oncortex == 1
     end
 end
 
- save([data_dir,filesep,'Electrode_AnatLabels_' condition2analyze, '_', band2analyze '.m'],'AnatLabels')
+ save([data_dir,filesep,'Electrode_AnatLabels_' condition2analyze, '_', band2analyze '.mat'],'AnatLabels')
 %     sh  = scatter3(testMat(:,1),testMat(:,2),testMat(:,3),60,ValRange,'filled');
 %     sh.MarkerFaceAlpha = .85;
 %     sh.SizeData = 100;
