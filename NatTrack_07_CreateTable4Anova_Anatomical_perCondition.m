@@ -22,9 +22,26 @@ if print_diagnosis == 1
         band = band{1};
         disp([cond, '-' ,band]);
         tbl = sortrows(tabulate(cellstr(AnatLabels)),3,'descend');
+        if idx == 1
+           tmptbl = tbl;
+        else 
+            tmptbl = [tmptbl; tbl];
+        end
         disp(tbl);
     end
 end
+
+% create table with the number of electrodes per anatomical region (total,
+% across conditions)
+regions = unique(tmptbl(:,1));
+for idx=1:length(regions)
+    this_region = strcmpi(regions{idx},cellstr(tmptbl(:,1)));
+    num_elec    = sum(cell2mat(tmptbl(this_region,2)));
+    datacell{idx,1} = regions{idx}
+    datacell{idx,2} = num_elec;
+end
+
+writetable(cell2table(sortrows(datacell,2,'descend'),'VariableNames',{'Region','Electrodes'}),[data_dir,filesep,'ElectrodeCountPerAnatRegions.xlsx'])
 
 condition2analyze = {'Speech','Music'};   % 'speech' or 'music'
 band2analyze      = {'SFB','HFB'};      % SFB (1-8 Hz) or HFB (70-120 Hz) 
@@ -91,7 +108,7 @@ for cond_i=1:length(condition2analyze)
         
         % now get only the desired electrodes that belong to the specified cluster
         testClusters = dbscan(testMat,mindist,minpoints);
-        tmptable     = sortrows(tabulate(testClusters),-3)
+        tmptable     = sortrows(tabulate(testClusters),-3);
         deleteThis   = 0;
         
         % identify clusters where number of elecs < minpoints
@@ -114,9 +131,9 @@ for cond_i=1:length(condition2analyze)
         % get anatomical labels to create anova table
         load([data_dir,filesep,'Electrode_AnatLabels_' condition2analyze{cond_i} '_' band2analyze{band_i} '.mat'])
         AnatLabels = cellstr(AnatLabels);
-        tmp1 = contains(AnatLabels,'somatomotor') | contains(AnatLabels,'somatosensory');
+%         tmp1 = contains(AnatLabels,'somatomotor') | contains(AnatLabels,'somatosensory');
         %     tmp2 = contains(AnatLabels,'stg') | contains(AnatLabels,'mtg');
-        AnatLabels(tmp1) = {'sensorymotor'};
+%         AnatLabels(tmp1) = {'sensorymotor'};
         %     AnatLabels(tmp2) = {'temporal'};
         disp([condition2analyze{cond_i}, '-' ,band2analyze{band_i}]);
         tbl = sortrows(tabulate(cellstr(AnatLabels)),3,'descend');
@@ -125,15 +142,16 @@ for cond_i=1:length(condition2analyze)
         if strcmpi(condition2analyze{cond_i},'Speech')
             these_elecs = contains(AnatLabels,'mtg') | ... %                 contains(AnatLabels,'somatomotor') | ...
                 contains(AnatLabels,'stg') | ...
-                contains(AnatLabels,'sensorymotor') | ...
+                contains(AnatLabels,'somatomotor') | ...
+                contains(AnatLabels,'somatosensory') | ...
                 contains(AnatLabels,'ifg') | ...
                 contains(AnatLabels,'supramarginal');
         elseif strcmpi(condition2analyze{cond_i},'Music')
             these_elecs = contains(AnatLabels,'stg') | ...
                 contains(AnatLabels,'mtg') | ...
                 contains(AnatLabels,'pfc') | ...
-                contains(AnatLabels,'supramarginal') | ...
-                contains(AnatLabels,'sensorymotor');
+                contains(AnatLabels,'supramarginal');% | ...
+%                 contains(AnatLabels,'sensorymotor');
         end
         % create and save table for this effect
         if band_i==1 %&& cond_i == 1
@@ -149,6 +167,7 @@ for cond_i=1:length(condition2analyze)
                     AnatLabels(these_elecs)', ...
                     RhoRange(these_elecs), LagRange(these_elecs), 'VariableNames', {'subject','frequency','condition','region','r','lag'});           
              tbl4anova = [tbl4anova; newtbl4anova];
+             tbl4anova.lag = tbl4anova.lag / 200;
              writetable(tbl4anova,[data_dir,filesep,'AnovaNatTrackTable_wn_ANAT_' condition2analyze{cond_i} '.csv'])
         end
     end

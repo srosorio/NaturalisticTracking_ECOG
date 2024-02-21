@@ -12,9 +12,9 @@ if print_diagnosis == 1
     for idx=1:length(fnames)
         load(fnames(idx).name)
         AnatLabels = cellstr(AnatLabels);
-        tmp1 = contains(AnatLabels,'premotor') | contains(AnatLabels,'somatomotor') | contains(AnatLabels,'somatosensory');
+%         tmp1 = contains(AnatLabels,'premotor') | contains(AnatLabels,'somatomotor') | contains(AnatLabels,'somatosensory');
         %     tmp2 = contains(AnatLabels,'stg') | contains(AnatLabels,'mtg');
-        AnatLabels(tmp1) = {'sensorymotor'};
+%         AnatLabels(tmp1) = {'sensorymotor'};
         %     AnatLabels(tmp2) = {'temporal'};
         info = split(fnames(idx).name,'_');
         cond = info{3};
@@ -114,9 +114,9 @@ for band_i=1:length(band2analyze)
         % get anatomical labels to create anova table
         load([data_dir,filesep,'Electrode_AnatLabels_' condition2analyze{cond_i} '_' band2analyze{band_i} '.mat'])
         AnatLabels = cellstr(AnatLabels);
-        tmp1 = contains(AnatLabels,'premotor') | contains(AnatLabels,'somatomotor') | contains(AnatLabels,'somatosensory');
+%         tmp1 = contains(AnatLabels,'premotor') | contains(AnatLabels,'somatomotor') | contains(AnatLabels,'somatosensory');
         %     tmp2 = contains(AnatLabels,'stg') | contains(AnatLabels,'mtg');
-        AnatLabels(tmp1) = {'sensorymotor'};
+%         AnatLabels(tmp1) = {'sensorymotor'};
         %     AnatLabels(tmp2) = {'temporal'};
         disp([condition2analyze{cond_i}, '-' ,band2analyze{band_i}]);
         tbl = sortrows(tabulate(cellstr(AnatLabels)),3,'descend');
@@ -124,8 +124,7 @@ for band_i=1:length(band2analyze)
         % get only the data we need
         these_elecs = contains(AnatLabels,'mtg') | ...
             contains(AnatLabels,'stg') | ...
-            contains(AnatLabels,'supramarginal') | ...
-            contains(AnatLabels,'sensorymotor');
+            contains(AnatLabels,'supramarginal');
         % create and save table for this effect
         if band_i==1 && cond_i == 1
             tbl4anova = table(subIDelec(these_elecs,1), ...
@@ -140,9 +139,11 @@ for band_i=1:length(band2analyze)
                     AnatLabels(these_elecs)', ...
                     RhoRange(these_elecs), LagRange(these_elecs), 'VariableNames', {'subject','frequency','condition','region','r','lag'});           
              tbl4anova = [tbl4anova; newtbl4anova];
+%              tbl4anova.lag = tbl4anova.lag / 200;
         end
     end
 end
-
+% convert samples to seconds
+tbl4anova.lag = tbl4anova.lag / 200;
 % save data
 writetable(tbl4anova,[data_dir,filesep,'AnovaNatTrackTable_wn_ANAT.csv'])

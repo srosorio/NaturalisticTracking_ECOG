@@ -7,16 +7,16 @@
 % S.Osorio - 2023
 
 % initialize BST
-% cd('F:\Matlab\brainstorm3');
-% brainstorm
+cd('F:\Matlab\brainstorm3');
+brainstorm
 %%
 clear, clc
-condition2analyze = 'speech';   % 'speech' or 'music'
+condition2analyze = 'Speech';   % 'speech' or 'music'
 band2analyze      = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz) 
 segestimation     = 0;          % whether to use windowed data
-plot_oncortex     = 1;          % whether to plot effect on cortical surface
-plot_histogram    = 1;          % whether to plot histogram of plotted values
-effect2plot       = 'lag';      % rho (corrcoefficients) or lag (xcorr lags)
+plot_oncortex     = 0;          % whether to plot effect on cortical surface
+plot_histogram    = 0;          % whether to plot histogram of plotted values
+effect2plot       = 'rho';      % rho (corrcoefficients) or lag (xcorr lags)
 perm_type         = 'wn';
 
 % set paths
@@ -139,6 +139,11 @@ end
 % save data
 save([data_dir,filesep,'stats_clustered_',band2analyze,'_',condition2analyze,'.mat'],'meanRho','meanPval','meanLag');
 
+% convert data from samples to ms
+if strcmpi(effect2plot,'Lag')
+    ValRange = ValRange/200;
+end
+
 % plot statistical effect on cortex
 if plot_oncortex == 1
     [hFig, iDS, iFig] = view_surface(SurfaceFile);
@@ -148,8 +153,8 @@ if plot_oncortex == 1
     sh  = scatter3(testMat(:,1),testMat(:,2),testMat(:,3),60,ValRange,'filled');
 %     sh.MarkerEdgeColor = [1 1 1];
 %     sh.MarkerEdgeAlpha = .5;
-    sh.MarkerFaceAlpha = .5;
-    sh.SizeData = 50;
+    sh.MarkerFaceAlpha = .8;
+    sh.SizeData = 80;
     ch = colorbar;
     ch.FontSize = 15;
 
@@ -169,7 +174,7 @@ if plot_histogram == 1
         xlabel('Correlation coefficient'); xlim([0 0.3]);
     else
         ylabel('Electrode count'); %ylim([0 50]);
-        xlabel('Lag (ms)'); xlim([-350 350]);
+        xlabel('Lag (ms)'); xlim([-2 2]);
     end
     if strcmpi(condition2analyze,'music')
         hh.FaceColor = colors(1,:);
@@ -190,9 +195,9 @@ if strcmpi(condition2analyze,'music')
         ch.Ticks = 0.08:0.005:0.10;
         ch.Label.String = 'Rho';
     else
-        ch.Label.String = 'Lag (ms)';
-        caxis([-250 250]);
-        ch.Ticks = -200:100:200;
+        ch.Label.String = 'Lag (s)';
+        caxis([-1.5 1.5]);
+        ch.Ticks = -1.5:.5:1.5;
     end
 else
     pvals = PValMat(:,:,1);
@@ -200,9 +205,9 @@ else
         caxis([0.08 0.12])
         ch.Ticks = 0.08:0.01:0.12;
     else
-        ch.Label.String = 'Lag (ms)';
-        caxis([-250 250]);
-        ch.Ticks = -200:100:200;
+        ch.Label.String = 'Lag (s)';
+        caxis([-1.5 1.5]);
+        ch.Ticks = -1.5:.5:1.5;
     end
 end
 % title([condition2analyze ' - ' band2analyze],'FontWeight','normal','FontSize',22);
@@ -210,7 +215,17 @@ end
 pvals = pvals(~isnan(pvals));
 
 if strcmpi(effect2plot,'rho')
-    disp(['n = ' num2str(sum(~isnan(meanRho))), ', r = ' num2str(mean(ValRange),2), ', elecs = ' num2str(length(ValRange)), ', p = ' num2str(mean(pvals),2), ', SD = ' num2str(std(ValRange),2)]);
+    disp(['n = ' num2str(sum(~isnan(meanRho))), ...
+          ', mean = ' num2str(mean(ValRange),2), ...
+          ', median = ' num2str(median(ValRange),2), ...
+          ', elecs = ' num2str(length(ValRange)), ...
+          ', p = ' num2str(mean(pvals),2), ...
+          ', SD = ' num2str(std(ValRange),2)]);
 else
-    disp(['n = ' num2str(sum(~isnan(meanRho))), ', r = ' num2str(mean(ValRange),2), ', elecs = ' num2str(length(ValRange)), ', p = ' num2str(mean(pvals),2), ', SD = ' num2str(std(ValRange),2)]);
+    disp(['n = ' num2str(sum(~isnan(meanRho))), ...
+          ', mean = ' num2str(mean(ValRange),2), ...
+          ', median = ' num2str(median(ValRange),2), ...
+          ', elecs = ' num2str(length(ValRange)), ...
+          ', p = ' num2str(mean(pvals),2), ...
+          ', SD = ' num2str(std(ValRange),2)]);
 end
