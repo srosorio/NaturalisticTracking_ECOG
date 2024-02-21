@@ -16,7 +16,6 @@ data_dir = [iEEG_dir,filesep,'Data'];
 
 band2analyze  = 'HFB';      % SFB (1-8 Hz) or HFB (70-120 Hz)
 perm_type     = 'wn';       % 'wn' = whitenoise, 'ts' trial shuffling
-segestimation = 0;          % use sliding window data (1 = yes, 0 = no) PROBABLY NEEDS TO BE DELETED)
 plot_FDR      = 0;          % plot histograms of FDR-corrected p values (1 = yes, 0 = no)
 plot_bars     = 1;          % bar plot (1 = yes, 0 = no)
 FDRcorrect    = 0;          % do FDR correction (1 = yes, 0 = no) 
@@ -27,11 +26,7 @@ else
 end
 
 % load data
-if segestimation == 1
-    % observed and permuted data obtained using windowing
-    load([data_dir,filesep,'xcorr_',band2analyze,'_windowed.mat'])
-    load([data_dir,filesep,'xcorr_',band2analyze,'_windowed_PERM.mat'])
-elseif strcmpi(perm_type,'ts')
+if strcmpi(perm_type,'ts')
     % observed and permuted data obtained using full 30 second window
     load([data_dir,filesep,'xcorr_',band2analyze,'.mat'])
     load([data_dir,filesep,'xcorr_',band2analyze,'_trialshuffle_PERM.mat'])    
@@ -75,29 +70,14 @@ for sub_i=1:n_subs
     % obtain the mean p value across trials for each electrode within each subject
     for trial_i=1:n_trials           
         for elec_i=1:n_elecs
-            % for analysis conducted in moving windows
-            if segestimation == 1   
-                % raw p values for speech
-                % null distribution from permuted data
-                null_dist   = mean(mean(r_speech_perm{sub_i}(elec_i,:,:,:),3),2);
-                % observed correlation coefficient
-                observed_r  = mean(mean(r_speech{sub_i}(elec_i,:,:),3));
-                pvals_speech{sub_i}(elec_i,:) = sum(null_dist>=observed_r) /  n_perms;             
-                % raw p values for music
-                null_dist   = mean(mean(r_music_perm{sub_i}(elec_i,:,:,:),3),2);
-                observed_r  = mean(mean(r_music{sub_i}(elec_i,:,:),3));   
-                pvals_music{sub_i}(elec_i,:)  = sum(null_dist>=observed_r) /  n_perms;
-            % for analysis conducted in the entire signal
-            else
-                % speech
-                null_dist   = mean(squeeze(r_speech_perm{sub_i}(elec_i,:,:)),1);
-                observed_r  = mean(r_speech{sub_i}(elec_i,:,:),2);
-                pvals_speech{sub_i}(elec_i,:) = sum(null_dist >= observed_r) / n_perms;
-                % music
-                null_dist   = mean(squeeze(r_music_perm{sub_i}(elec_i,:,:)),1);
-                observed_r  = mean(r_music{sub_i}(elec_i,:,:),2);
-                pvals_music{sub_i}(elec_i,:)  = sum(null_dist >= observed_r) / n_perms;
-            end
+            % speech
+            null_dist   = mean(squeeze(r_speech_perm{sub_i}(elec_i,:,:)),1);
+            observed_r  = mean(r_speech{sub_i}(elec_i,:,:),2);
+            pvals_speech{sub_i}(elec_i,:) = sum(null_dist >= observed_r) / n_perms;
+            % music
+            null_dist   = mean(squeeze(r_music_perm{sub_i}(elec_i,:,:)),1);
+            observed_r  = mean(r_music{sub_i}(elec_i,:,:),2);
+            pvals_music{sub_i}(elec_i,:)  = sum(null_dist >= observed_r) / n_perms;
         end
     end
     % p val histograms
@@ -214,17 +194,14 @@ disp(['SPEECH: Statistically significant data in ' num2str(subeffect) ' out of '
 subeffect   = sum(any(dataMat(:,:,2)));
 disp(['MUSIC: Statistically significant data in ' num2str(subeffect) ' out of ' num2str(length(sub2plot)) ' subjects'])
 
-% save data
-if segestimation == 1
-    save([data_dir,filesep,'CROSdata_' band2analyze '_windowed.mat'],  ... 
-    'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
-elseif strcmpi(perm_type,'ts')
-    save([data_dir,filesep,'CROSdata_' band2analyze '_trialshuffle.mat'],  ...
-        'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
-elseif strcmpi(perm_type,'wn')
-    save([data_dir,filesep,'CROSdata_' band2analyze '_whitenoise.mat'],  ...
-        'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
-end
+% % save data
+% if strcmpi(perm_type,'ts')
+%     save([data_dir,filesep,'CROSdata_' band2analyze '_trialshuffle.mat'],  ...
+%         'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
+% elseif strcmpi(perm_type,'wn')
+%     save([data_dir,filesep,'CROSdata_' band2analyze '_whitenoise.mat'],  ...
+%         'dataMat','LagMat','PValMat','sub2plot','TotalElecs','AllChannelLabels','names4fields');
+% end
 
 % bar plots for total number of electrodes per condition
 if plot_bars == 1
