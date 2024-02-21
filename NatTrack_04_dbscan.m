@@ -19,8 +19,8 @@ segestimation     = 0;  % wether to use segmented data
 plot_neteffect    = 0;  % plot effect prior to statistics
 dbscan_param      = 1;  % plot dbscan optimization process
 plot_clusters     = 1;  % only after dbscan optimization
-condition2analyze = 'speech';
-band2analyze      = 'SFB';
+condition2analyze = 'Speech';
+band2analyze      = 'HFB';
 perm_type         = 'wn';   % wn = whitenoise, ts = trialshuffling
 % -------------------------------------------------------------------------
 
@@ -183,7 +183,7 @@ if dbscan_param == 1
         end
     end
     
-    opt_idx = prctelecs ./ (dsts*1000) .* points' .* numclusters;  
+    opt_idx = prctelecs ./ (dsts) .* (points' .* numclusters);  
     max_val = max(max(opt_idx));
     opt_idx = opt_idx / max_val; 
     
@@ -192,8 +192,8 @@ if dbscan_param == 1
     plot(dsts,opt_idx,'LineWidth',1.5)
     ylabel('OI_{norm}');
     xlabel('epsilon');
-    legend(num2str(points'),'Location','SouthEast'); legend boxoff
-    ylim([0 1.02]); set(gca,'FontSize',20);
+    legend(num2str(points'),'Location','NorthEast'); legend boxoff
+    ylim([0 1.02]); set(gca,'FontSize',12);
     title([condition2analyze ' - ' band2analyze],'FontWeight','normal')
     box off
 end
