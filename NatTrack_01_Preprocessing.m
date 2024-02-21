@@ -80,6 +80,7 @@ for sub_i=1:length(sub2plot)
     % delete necessary channels and keep only the ECOG channels identified above
     ThisData.trial{1} = ThisData.trial{1}(Channels2keepTask,:);
     ThisData.label    = ThisData.label(Channels2keepTask);
+    
     % and now keep only good channels
     ThisData.trial{1} = ThisData.trial{1}(ChannelFlagTask == 1,:);
     ThisData.label    = ThisData.label(ChannelFlagTask == 1);    
