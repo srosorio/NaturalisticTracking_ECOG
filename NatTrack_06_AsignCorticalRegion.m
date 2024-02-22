@@ -7,8 +7,8 @@
 % S.Osorio - 2023
 
 % initialize BST
-% cd('F:\Matlab\brainstorm3');
-% brainstorm
+cd('F:\Matlab\brainstorm3');
+brainstorm
 %%
 clear, clc, close all
 condition2analyze = 'Music';   % 'speech' or 'music'
@@ -153,60 +153,4 @@ if plot_oncortex == 1
     end
 end
 
- save([data_dir,filesep,'Electrode_AnatLabels_' condition2analyze, '_', band2analyze '.mat'],'AnatLabels')
-%     sh  = scatter3(testMat(:,1),testMat(:,2),testMat(:,3),60,ValRange,'filled');
-%     sh.MarkerFaceAlpha = .85;
-%     sh.SizeData = 100;
-
-%     ch = colorbar;
-%     if strcmpi(effect2plot,'rho')
-%         ch.Label.String = 'Rho';
-%         %caxis([0.05 .10]);  % caxis values will likely need to be adjusted manually
-%     else
-%         ch.Label.String = 'Lag (ms)';
-%         caxis([-250 250]);
-%     end
-%     ch.FontSize = 20;
-%     title([condition2analyze ' - ' band2analyze],'FontWeight','normal','FontSize',22);
-% end
-% 
-% % histogram for ploted values
-% if plot_histogram == 1
-%     % colors per condition (1,:) music, (2,:) speech, (3,:) music and speech
-%     colors 	= [0.7176 0.2745 1.0000; ...
-%                0.9412 0.5804 0.3373; ...
-%                0.4667 0.6745 0.1882];  
-%            
-%     figure,clf
-%     hh = histogram(ValRange);
-%     if strcmpi(effect2plot,'rho')
-%         ylabel('Electrode count'); %ylim([0 30]);
-%         xlabel('Correlation coefficient'); xlim([0 0.3]);
-%     else
-%         ylabel('Electrode count'); %ylim([0 50]);
-%         xlabel('Lag (ms)'); xlim([-350 350]);
-%     end
-%     if strcmpi(condition2analyze,'music')
-%         hh.FaceColor = colors(1,:);
-%     else
-%         hh.FaceColor = colors(2,:);
-%     end       
-%     hh.EdgeColor = [1 1 1];
-%     title([condition2analyze ' - ' band2analyze],'FontWeight','Normal');
-%     set(gca,'FontSize',20,'FontName','Arial');
-%     box off
-% end
-% 
-% % print some statistics
-% if strcmpi(condition2analyze,'music')
-%     pvals = PValMat(:,:,2);
-% else
-%     pvals = PValMat(:,:,1);
-% end
-% pvals = pvals(~isnan(pvals));
-% 
-% if strcmpi(effect2plot,'rho')
-%     disp(['n = ' num2str(sum(~isnan(meanRho))), ', r = ' num2str(mean(ValRange),2), ', elecs = ' num2str(length(ValRange)), ', p = ' num2str(mean(pvals),2), ', SD = ' num2str(std(ValRange),2)]);
-% else
-%     disp(['n = ' num2str(sum(~isnan(meanRho))), ', r = ' num2str(mean(ValRange),2), ', elecs = ' num2str(length(ValRange)), ', p = ' num2str(mean(pvals),2), ', SD = ' num2str(std(ValRange),2)]);
-% end
+%  save([data_dir,filesep,'Electrode_AnatLabels_' condition2analyze, '_', band2analyze '.mat'],'AnatLabels')
