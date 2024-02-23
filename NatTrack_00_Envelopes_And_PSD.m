@@ -66,9 +66,11 @@ save([data_dir,filesep,'envelopes_music.mat'],'envelope_music');
 save([data_dir,filesep,'envelopes_speech.mat'],'envelope_speech');
 
 %% Get PSDs
+window   = 1200;
+noverlap = 600;
 
 % get powers spectrum density for music
-[psd_music, frex_music] = pwelch(envelope_music',2000,1000,[],250);
+[psd_music, frex_music] = pwelch(envelope_music',window,noverlap,[],200);
 % normalize spectrum
 psd_music = psd_music ./ sum(psd_music);
 
@@ -76,7 +78,7 @@ psd_music = psd_music ./ sum(psd_music);
 figure(1), clf
 h1 = plot(frex_music,psd_music(:,1:6),'linew',1);
 xlim([0 8]); 
-ylim([0 .3]); yticks(0.1:0.1:0.3)
+ylim([0 .3]); yticks(0:0.05:0.3);
 xlabel('Frequency (Hz)'); ylabel('Normalized power');
 title('Music','FontWeight','normal');
 set(gca,'FontSize',12);
@@ -91,7 +93,7 @@ legend({'Segment 1', 'Segment 2', 'Segment 3', 'Segment 4', 'Segment 5', 'Segmen
 saveas(gca,[Fig_Dir,filesep,'MusicStimuliPSD.tiff']);
 
 % now get the PSD for speech
-[psd_speech, frex_speech] = pwelch(envelope_speech',2000,1000,[],250);
+[psd_speech, frex_speech] = pwelch(envelope_speech',window,noverlap,[],200);
 % normalize spectrum
 psd_speech = psd_speech ./ sum(psd_speech);
 
@@ -99,7 +101,7 @@ psd_speech = psd_speech ./ sum(psd_speech);
 figure(2), clf
 h1 = plot(frex_speech,psd_speech,'linew',1);
 xlim([0 8]); 
-ylim([0 .3]); yticks(0.1:0.1:0.3)
+ylim([0 .1]); yticks(0:0.02:0.1);
 xlabel('Frequency (Hz)'); ylabel('Normalized power');
 title('Speech','FontWeight','normal');
 set(gca,'FontSize',12);

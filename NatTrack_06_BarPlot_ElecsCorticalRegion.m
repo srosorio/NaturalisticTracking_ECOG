@@ -25,7 +25,8 @@ title('Music','FontWeight','normal')
 box off
 set(gca,'FontSize',12, 'ylim', [0 50]);
 axis square
-tmptbl = table({'IFG','IPC','MTG','PFC','Premotor','Somatomotor','Somatosensory','STG','Supramarginal'}',Values(:,1), Values(:,2));
+tmptbl = table({'IFG','IPC','MTG','PFC','Premotor','Somatomotor','Somatosensory','STG','Supramarginal'}', ...
+    Values(:,1), Values(:,2), 'VariableNames',{'Region','SFB','HFB'});
 writetable(tmptbl,[data_dir,filesep,'ElecCountPerAnatRegion_Music.xlsx']);
 
 % speech
@@ -50,7 +51,8 @@ box off
 set(gca,'FontSize',12, 'ylim', [0 250], 'xlim',[0 9])
 axis square
 
-tmptbl = table({'IFG','MTG','PFC','Premotor','Somatomotor','Somatosensory','STG','Supramarginal'}',Values(:,1), Values(:,2));
+tmptbl = table({'IFG','MTG','PFC','Premotor','Somatomotor','Somatosensory','STG','Supramarginal'}' ...
+    ,Values(:,1), Values(:,2), 'VariableNames',{'Region','SFB','HFB'});
 writetable(tmptbl,[data_dir,filesep,'ElecCountPerAnatRegion_Speech.xlsx']);
 %%
 % both
@@ -75,7 +77,8 @@ ylabel('Electrode count');
 box off
 axis square
 
-tmptbl = table({'STG','MTG','Supramarginal','STG','MTG','Supramarginal'}',Values(:,1), Values(:,2));
+tmptbl = table({'STG','MTG','Supramarginal','STG','MTG','Supramarginal'}', ...
+    Values(:,1), Values(:,2), 'VariableNames',{'Region','SFB','HFB'});
 writetable(tmptbl,[data_dir,filesep,'ElecCountPerAnatRegion_Both.xlsx']);
 
 tbl = readtable([data_dir,filesep,'AnovaNatTrackTable_wn_ANAT.csv']);
